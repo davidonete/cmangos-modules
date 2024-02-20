@@ -1,16 +1,9 @@
-#ifndef MANGOS_MODULES_MGR_H
-#define MANGOS_MODULES_MGR_H
+#ifndef MANGOS_MODULE_MGR_H
+#define MANGOS_MODULE_MGR_H
 
 #include <vector>
 
-class Module
-{
-public:
-    Module();
-    virtual ~Module();
-
-    virtual void OnWorldInitialized() {}
-};
+class Module;
 
 class ModuleMgr
 {
@@ -20,7 +13,7 @@ public:
 
     void RegisterModule(Module* module);
 
-    // Callbacks
+    // Hooks
     // World
     void OnWorldInitialized();
 

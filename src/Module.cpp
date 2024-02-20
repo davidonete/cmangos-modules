@@ -1,7 +1,7 @@
 #include "Module.h"
 #include "ModuleConfig.h"
 
-Module::Module(ModuleConfig* config)
+Module::Module()
 : config(nullptr)
 {
     sModuleMgr.RegisterModule(this);

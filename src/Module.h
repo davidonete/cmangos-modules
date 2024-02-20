@@ -20,7 +20,7 @@ typedef std::map<uint8, ActionButton> ActionButtonList;
 class Module
 {
 public:
-    Module();
+    Module(const std::string& name);
     virtual ~Module();
 
     void Initialize();

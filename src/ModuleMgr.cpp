@@ -10,15 +10,20 @@ ModuleMgr::~ModuleMgr()
     modules.clear();
 }
 
-void ModuleMgr::RegisterModule(Module* module)
+void ModuleMgr::RegisterModule(Module* module, const std::string& name)
 {
-    modules.push_back(module);
+    auto it = modules.find(name);
+    if (it == modules.end())
+    {
+        modules.insert(std::make_pair(name, module));
+    }
 }
 
 void ModuleMgr::OnWorldInitialized()
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         module->Initialize();
         module->OnWorldInitialized();
     }
@@ -26,8 +31,9 @@ void ModuleMgr::OnWorldInitialized()
 
 bool ModuleMgr::OnUseItem(Player* player, Item* item)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         if (module->OnUseItem(player, item))
         {
             return true;
@@ -39,8 +45,9 @@ bool ModuleMgr::OnUseItem(Player* player, Item* item)
 
 bool ModuleMgr::OnGossipHello(Player* player, Creature* creature)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         if (module->OnGossipHello(player, creature))
         {
             return true;
@@ -59,8 +66,9 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
             Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
             if (creature)
             {
-                for (Module* module : modules)
+                for (const auto& pair : modules)
                 {
+                    Module* module = pair.second;
                     if (module->OnGossipSelect(player, creature, sender, action, code))
                     {
                         return true;
@@ -73,8 +81,9 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
             GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
             if (gameObject)
             {
-                for (Module* module : modules)
+                for (const auto& pair : modules)
                 {
+                    Module* module = pair.second;
                     if (module->OnGossipSelect(player, gameObject, sender, action, code))
                     {
                         return true;
@@ -87,8 +96,9 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
             Item* item = player->GetItemByGuid(guid);
             if (item)
             {
-                for (Module* module : modules)
+                for (const auto& pair : modules)
                 {
+                    Module* module = pair.second;
                     if (module->OnGossipSelect(player, item, sender, action, code))
                     {
                         return true;
@@ -103,72 +113,81 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
 
 void ModuleMgr::OnLearnTalent(Player* player, uint32 spellId)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         module->OnLearnTalent(player, spellId);
     }
 }
 
 void ModuleMgr::OnResetTalents(Player* player, uint32 cost)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         module->OnResetTalents(player, cost);
     }
 }
 
 void ModuleMgr::OnPreLoadFromDB(uint32 playerId)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         module->OnPreLoadFromDB(playerId);
     }
 }
 
 void ModuleMgr::OnLoadFromDB(Player* player)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         module->OnLoadFromDB(player);
     }
 }
 
 void ModuleMgr::OnSaveToDB(Player* player)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         module->OnSaveToDB(player);
     }
 }
 
 void ModuleMgr::OnLogOut(Player* player)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         module->OnLogOut(player);
     }
 }
 
 void ModuleMgr::OnCharacterCreated(Player* player)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         module->OnCharacterCreated(player);
     }
 }
 
 void ModuleMgr::OnCharacterDeleted(uint32 playerId)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         module->OnCharacterDeleted(playerId);
     }
 }
 
 bool ModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList& actionButtons)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         if (module->OnLoadActionButtons(player, actionButtons))
         {
             return true;
@@ -180,8 +199,9 @@ bool ModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList& actionButt
 
 bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList& actionButtons)
 {
-    for (Module* module : modules)
+    for (const auto& pair : modules)
     {
+        Module* module = pair.second;
         if (module->OnSaveActionButtons(player, actionButtons))
         {
             return true;

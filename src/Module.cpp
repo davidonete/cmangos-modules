@@ -2,10 +2,10 @@
 #include "ModuleMgr.h"
 #include "ModuleConfig.h"
 
-Module::Module()
+Module::Module(const std::string& name)
 : config(nullptr)
 {
-    sModuleMgr.RegisterModule(this);
+    sModuleMgr.RegisterModule(this, name);
 }
 
 Module::~Module()

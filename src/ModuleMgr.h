@@ -23,7 +23,7 @@ public:
     ModuleMgr() {}
     ~ModuleMgr();
 
-    void RegisterModule(Module* module);
+    void RegisterModule(Module* module, const std::string& name);
 
     // World Hooks
     void OnWorldInitialized();
@@ -44,7 +44,7 @@ public:
     bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons);
 
 private:
-    std::vector<Module*> modules;
+    std::map<std::string, Module*> modules;
 };
 
 #define sModuleMgr MaNGOS::Singleton<ModuleMgr>::Instance()

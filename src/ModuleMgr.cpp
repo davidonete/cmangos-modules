@@ -3,6 +3,12 @@
 
 ModuleMgr::~ModuleMgr()
 {
+    for (Module* module : modules)
+    {
+        delete module;
+        module = nullptr;
+    }
+
     modules.clear();
 }
 
@@ -13,11 +19,9 @@ void ModuleMgr::RegisterModule(Module* module)
 
 void ModuleMgr::OnWorldInitialized()
 {
-    /*
     for (Module* module : modules)
     {
         module->Initialize();
         module->OnWorldInitialized();
     }
-    */
 }

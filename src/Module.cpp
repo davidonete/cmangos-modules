@@ -12,4 +12,5 @@ void Module::Initialize()
 {
     config = CreateConfig();
     config->Load();
+    OnInitialize();
 }

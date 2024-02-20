@@ -12,12 +12,14 @@ public:
     void Initialize();
 
     // Hooks
+    virtual void OnInitialize() {}
+
     // World
     virtual void OnWorldInitialized() {}
 
 protected:
-    virtual ModuleConfig* CreateConfig() { return nullptr; }
-    virtual ModuleConfig* GetConfig() { return nullptr; }
+    virtual ModuleConfig* CreateConfig() = 0;
+    virtual ModuleConfig* GetConfig() = 0;
     ModuleConfig* GetConfigInternal() { return config; }
 
 private:

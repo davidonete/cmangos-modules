@@ -1,8 +1,14 @@
 set(LIBRARY_NAME modules)
 
+function(capitalize_first_letter INPUT_STRING OUTPUT_VARIABLE)
+    string(SUBSTRING ${INPUT_STRING} 0 1 FIRST_LETTER)
+    string(SUBSTRING ${INPUT_STRING} 1 -1 REMAINING_STRING)
+    string(TOUPPER ${FIRST_LETTER} FIRST_LETTER_UPPER)
+    set(${OUTPUT_VARIABLE} "${FIRST_LETTER_UPPER}${REMAINING_STRING}")
+endfunction()
+
 # Generate global include for all active modules
 set(SKIP_FOLDERS "Bots" "modules")
-
 set(ALL_MODULE_HEADERS "")
 
 file(GLOB SUBDIRECTORIES LIST_DIRECTORIES true ${CMAKE_SOURCE_DIR}/src/modules/*)
@@ -12,9 +18,10 @@ foreach(SUBDIR ${SUBDIRECTORIES})
   list(FIND SKIP_FOLDERS ${FOLDER_NAME} SKIP_INDEX)
   if (SKIP_INDEX EQUAL -1)
     string(TOUPPER ${FOLDER_NAME} UPPER_FOLDER_NAME)
+	capitalize_first_letter(${FOLDER_NAME} CAPITALIZED_FOLDER_NAME)
     if(BUILD_MODULE_${UPPER_FOLDER_NAME})
 	  file(GLOB MODULE_HEADERS ${CMAKE_SOURCE_DIR}/src/modules/${FOLDER_NAME}/src/*.h)
-      list(APPEND ALL_MODULE_HEADERS ${MODULE_HEADERS})
+      list(APPEND ALL_MODULE_HEADERS "${CMAKE_SOURCE_DIR}/src/modules/${FOLDER_NAME}/src/${CAPITALIZED_FOLDER_NAME}Mgr.h")
 	endif()
   endif()
 endforeach()

@@ -1,6 +1,30 @@
 set(LIBRARY_NAME Modules)
 
+# Generate global include for all active modules
+set(SKIP_FOLDERS "Bots" "modules")
 
+set(ALL_MODULE_HEADERS "")
+
+file(GLOB SUBDIRECTORIES LIST_DIRECTORIES true ${CMAKE_SOURCE_DIR}/src/modules/*)
+foreach(SUBDIR ${SUBDIRECTORIES})
+  get_filename_component(FOLDER_NAME ${SUBDIR} NAME)
+  # Check if the folder should be skipped
+  list(FIND SKIP_FOLDERS ${FOLDER_NAME} SKIP_INDEX)
+  if (SKIP_INDEX EQUAL -1)
+    string(TOUPPER ${FOLDER_NAME} UPPER_FOLDER_NAME)
+    if(BUILD_MODULE_${UPPER_FOLDER_NAME})
+	  file(GLOB MODULE_HEADERS ${CMAKE_SOURCE_DIR}/src/modules/${FOLDER_NAME}/src/*.h)
+      list(APPEND ALL_MODULE_HEADERS ${MODULE_HEADERS})
+	endif()
+  endif()
+endforeach()
+
+set(OUTPUT_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/src/Modules.h)
+file(WRITE ${OUTPUT_HEADER} "// Auto-generated file\n")
+foreach(HEADER ${ALL_MODULE_HEADERS})
+  file(RELATIVE_PATH RELATIVE_PATH_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/src ${HEADER})
+  file(APPEND ${OUTPUT_HEADER} "#include \"${RELATIVE_PATH_HEADER}\"\n")
+endforeach()
 
 # Base files
 file(GLOB modules_source ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)

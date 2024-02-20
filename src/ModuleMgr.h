@@ -37,9 +37,9 @@ public:
     void OnPreLoadFromDB(uint32 playerId);
     void OnLoadFromDB(Player* player);
     void OnSaveToDB(Player* player);
+    void OnDeleteFromDB(uint32 playerId);
     void OnLogOut(Player* player);
     void OnCharacterCreated(Player* player);
-    void OnCharacterDeleted(uint32 playerId);
     bool OnLoadActionButtons(Player* player, ActionButtonList& actionButtons);
     bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons);
 

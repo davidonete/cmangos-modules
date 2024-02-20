@@ -53,12 +53,12 @@ public:
     virtual void OnLoadFromDB(Player* player) {}
     // Called when a player is saved to DB
     virtual void OnSaveToDB(Player* player) {}
+    // Called when a character gets deleted
+    virtual void OnDeleteFromDB(uint32 playerId) {}
     // Called when a player logs out of the game
     virtual void OnLogOut(Player* player) {}
     // Called when a new character is created
     virtual void OnCharacterCreated(Player* player) {}
-    // Called when a character gets deleted
-    virtual void OnCharacterDeleted(uint32 playerId) {}
     // Called when the action buttons of a character are loaded. Return true to override default logic
     virtual bool OnLoadActionButtons(Player* player, ActionButtonList& actionButtons) { return false; }
     // Called when the action buttons of a character are saved to DB. Return true to override default logic

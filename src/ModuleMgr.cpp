@@ -156,6 +156,15 @@ void ModuleMgr::OnSaveToDB(Player* player)
     }
 }
 
+void ModuleMgr::OnDeleteFromDB(uint32 playerId)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnDeleteFromDB(playerId);
+    }
+}
+
 void ModuleMgr::OnLogOut(Player* player)
 {
     for (const auto& pair : modules)
@@ -171,15 +180,6 @@ void ModuleMgr::OnCharacterCreated(Player* player)
     {
         Module* module = pair.second;
         module->OnCharacterCreated(player);
-    }
-}
-
-void ModuleMgr::OnCharacterDeleted(uint32 playerId)
-{
-    for (const auto& pair : modules)
-    {
-        Module* module = pair.second;
-        module->OnCharacterDeleted(playerId);
     }
 }
 

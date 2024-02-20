@@ -1,4 +1,5 @@
 #include "Module.h"
+#include "ModuleMgr.h"
 #include "ModuleConfig.h"
 
 Module::Module()

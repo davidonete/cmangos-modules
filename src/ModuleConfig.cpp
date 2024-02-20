@@ -1,7 +1,10 @@
 #include "ModuleConfig.h"
 
+#include "Log.h"
+#include "SystemConfig.h"
+
 ModuleConfig::ModuleConfig(const std::string& filename)
-, filename(filename)
+: filename(filename)
 {
 
 }
@@ -14,7 +17,7 @@ bool ModuleConfig::Load()
     }
     else
     {
-        sLog.outError("Failed to open configuration file dualspec.conf");
+        sLog.outError(std::string("Failed to open configuration file" + filename).c_str());
         return false;
     }
 }

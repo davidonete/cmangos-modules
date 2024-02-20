@@ -1,4 +1,4 @@
-set(LIBRARY_NAME Modules)
+set(LIBRARY_NAME modules)
 
 # Generate global include for all active modules
 set(SKIP_FOLDERS "Bots" "modules")
@@ -28,7 +28,7 @@ endforeach()
 
 # Base files
 file(GLOB modules_source ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
-    source_group("Modules" FILES ${modules_source})
+    source_group("modules" FILES ${modules_source})
 	
 # Define base source library
 set(LIBRARY_SRCS ${modules_source})

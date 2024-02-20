@@ -8,6 +8,12 @@ Module::Module()
     sModuleMgr.RegisterModule(this);
 }
 
+Module::~Module()
+{
+    delete config;
+    config = nullptr;
+}
+
 void Module::Initialize()
 {
     config = CreateConfig();

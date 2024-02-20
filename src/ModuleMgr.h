@@ -29,4 +29,6 @@ private:
 };
 
 #define sModuleMgr MaNGOS::Singleton<ModuleMgr>::Instance()
+
+#include "Modules.h"
 #endif

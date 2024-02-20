@@ -169,14 +169,24 @@ bool ModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList& actionButt
 {
     for (Module* module : modules)
     {
-        module->OnLoadActionButtons(player, actionButtons);
+        if (module->OnLoadActionButtons(player, actionButtons))
+        {
+            return true;
+        }
     }
+
+    return false;
 }
 
 bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList& actionButtons)
 {
     for (Module* module : modules)
     {
-        module->OnSaveActionButtons(player, actionButtons);
+        if (module->OnSaveActionButtons(player, actionButtons))
+        {
+            return true;
+        }
     }
+
+    return false;
 }

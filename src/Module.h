@@ -3,6 +3,7 @@
 
 #include "Platform/Define.h"
 
+#include <map>
 #include <string>
 
 class Creature;
@@ -11,6 +12,10 @@ class Item;
 class ModuleConfig;
 class Player;
 class Unit;
+
+struct ActionButton;
+
+typedef std::map<uint8, ActionButton> ActionButtonList;
 
 class Module
 {
@@ -55,9 +60,9 @@ public:
     // Called when a character gets deleted
     virtual void OnCharacterDeleted(uint32 playerId) {}
     // Called when the action buttons of a character are loaded. Return true to override default logic
-    virtual bool OnLoadActionButtons(Player* player, ActionButtonList& actionButtons) {}
+    virtual bool OnLoadActionButtons(Player* player, ActionButtonList& actionButtons) { return false; }
     // Called when the action buttons of a character are saved to DB. Return true to override default logic
-    virtual bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons) {}
+    virtual bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons) { return false; }
 
 protected:
     ModuleConfig* GetConfigInternal() { return config; }

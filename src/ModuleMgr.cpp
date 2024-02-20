@@ -15,6 +15,7 @@ void ModuleMgr::OnWorldInitialized()
 {
     for (Module* module : modules)
     {
+        module->Initialize();
         module->OnWorldInitialized();
     }
 }

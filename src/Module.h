@@ -1,37 +1,26 @@
 #ifndef MANGOS_MODULE_H
 #define MANGOS_MODULE_H
 
-#include "Config/Config.h"
+class ModuleConfig;
 
-class ModuleConfig
-{
-public:
-    ModuleConfig(const std::string& filename);
-    virtual ~ModuleConfig() {}
-
-    bool Load();
-
-protected:
-    virtual bool OnLoad() { return true; }
-
-private:
-    std::string filename;
-    Config config;
-};
-
-template <typename T>
 class Module
 {
 public:
-    Module(T moduleConfig);
-    virtual ~Module() {}
+    Module();
+    virtual ~Module();
+
+    void Initialize();
+
 
     // Hooks
     // World
     virtual void OnWorldInitialized() {}
 
 protected:
-    T moduleConfig;
+    virtual ModuleConfig* CreateConfig() = 0;
+
+private:
+    ModuleConfig* config;
 };
 
 #endif

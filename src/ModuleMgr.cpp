@@ -29,6 +29,16 @@ void ModuleMgr::OnWorldInitialized()
     }
 }
 
+void ModuleMgr::OnWorldUpdated(uint32 elapsed)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnUpdate(elapsed);
+        module->OnWorldUpdated(elapsed);
+    }
+}
+
 bool ModuleMgr::OnUseItem(Player* player, Item* item)
 {
     for (const auto& pair : modules)
@@ -57,7 +67,7 @@ bool ModuleMgr::OnGossipHello(Player* player, Creature* creature)
     return false;
 }
 
-bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 sender, uint32 action, const std::string& code)
+bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId)
 {
     if (player)
     {
@@ -69,7 +79,7 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
                 for (const auto& pair : modules)
                 {
                     Module* module = pair.second;
-                    if (module->OnGossipSelect(player, creature, sender, action, code))
+                    if (module->OnGossipSelect(player, creature, sender, action, code, gossipListId))
                     {
                         return true;
                     }
@@ -84,7 +94,7 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
                 for (const auto& pair : modules)
                 {
                     Module* module = pair.second;
-                    if (module->OnGossipSelect(player, gameObject, sender, action, code))
+                    if (module->OnGossipSelect(player, gameObject, sender, action, code, gossipListId))
                     {
                         return true;
                     }
@@ -99,7 +109,7 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
                 for (const auto& pair : modules)
                 {
                     Module* module = pair.second;
-                    if (module->OnGossipSelect(player, item, sender, action, code))
+                    if (module->OnGossipSelect(player, item, sender, action, code, gossipListId))
                     {
                         return true;
                     }
@@ -203,6 +213,181 @@ bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList& actionButt
     {
         Module* module = pair.second;
         if (module->OnSaveActionButtons(player, actionButtons))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ModuleMgr::OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnHandleFall(player, movementInfo, lastFallZ))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void ModuleMgr::OnResurrect(Player* player)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnResurrect(player);
+    }
+}
+
+void ModuleMgr::OnGiveXP(Player* player, uint32 xp, Creature* victim)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnGiveXP(player, xp, victim);
+    }
+}
+
+void ModuleMgr::OnGiveLevel(Player* player, uint32 level)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnGiveLevel(player, level);
+    }
+}
+
+void ModuleMgr::OnModifyMoney(Player* player, int32 diff)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnModifyMoney(player, diff);
+    }
+}
+
+void ModuleMgr::OnSetReputation(Player* player, const FactionEntry* factionEntry, int32 standing, bool incremental)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnSetReputation(player, factionEntry, standing, incremental);
+    }
+}
+
+void ModuleMgr::OnRewardQuest(Player* player, const Quest* quest)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnRewardQuest(player, quest);
+    }
+}
+
+bool ModuleMgr::OnPrepareGossipMenu(Player* player, WorldObject* source, const GossipMenuItems& gossipMenu)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnPrepareGossipMenu(player, source, gossipMenu))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void ModuleMgr::OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnGetPlayerLevelInfo(player, info);
+    }
+}
+
+bool ModuleMgr::OnRespawn(Creature* creature)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnRespawn(creature))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ModuleMgr::OnUseFishingNode(GameObject* gameObject, Player* player)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnUseFishingNode(gameObject, player))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ModuleMgr::OnCalculateEffectiveBlockChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnCalculateEffectiveBlockChance(unit, attacker, attType, ability, outChance))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ModuleMgr::OnCalculateEffectiveParryChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnCalculateEffectiveParryChance(unit, attacker, attType, ability, outChance))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ModuleMgr::OnCalculateEffectiveCritChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, float& outChance)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnCalculateEffectiveCritChance(unit, victim, attType, ability, outChance))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ModuleMgr::OnCalculateEffectiveMissChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, const Spell* const* currentSpells, const SpellPartialResistDistribution& spellPartialResistDistribution, float& outChance)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnCalculateEffectiveMissChance(unit, victim, attType, ability, currentSpells, spellPartialResistDistribution, outChance))
         {
             return true;
         }

@@ -103,6 +103,8 @@ public:
     virtual bool OnUseFishingNode(GameObject* gameObject, Player* player) { return false; }
 
     // Unit Hooks
+    // Called when calculating the effective dodge chance of an attack. Return true to override default logic
+    virtual bool OnCalculateEffectiveDodgeChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance) { return false; }
     // Called when calculating the effective block chance of an attack. Return true to override default logic
     virtual bool OnCalculateEffectiveBlockChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance) { return false; }
     // Called when calculating the effective parry chance of an attack. Return true to override default logic
@@ -111,6 +113,10 @@ public:
     virtual bool OnCalculateEffectiveCritChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, float& outChance) { return false; }
     // Called when calculating the effective miss chance of an attack. Return true to override default logic
     virtual bool OnCalculateEffectiveMissChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, const Spell* const* currentSpells, const SpellPartialResistDistribution& spellPartialResistDistribution, float& outChance) { return false; }
+    // Called when calculating the spell miss chance of an attack. Return true to override default logic
+    virtual bool OnCalculateSpellMissChance(const Unit* unit, const Unit* victim, uint32 schoolMask, const SpellEntry* spell, float& outChance) { return false; }
+    // Called when calculating the attack distance. Return true to override default logic
+    virtual bool OnGetAttackDistance(const Unit* unit, const Unit* target, float& outDistance) { return false; }
 
 protected:
     ModuleConfig* GetConfigInternal() { return config; }

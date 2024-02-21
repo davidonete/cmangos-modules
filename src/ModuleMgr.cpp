@@ -340,6 +340,20 @@ bool ModuleMgr::OnUseFishingNode(GameObject* gameObject, Player* player)
     return false;
 }
 
+bool ModuleMgr::OnCalculateEffectiveDodgeChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnCalculateEffectiveDodgeChance(unit, attacker, attType, ability, outChance))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool ModuleMgr::OnCalculateEffectiveBlockChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
 {
     for (const auto& pair : modules)
@@ -388,6 +402,34 @@ bool ModuleMgr::OnCalculateEffectiveMissChance(const Unit* unit, const Unit* vic
     {
         Module* module = pair.second;
         if (module->OnCalculateEffectiveMissChance(unit, victim, attType, ability, currentSpells, spellPartialResistDistribution, outChance))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ModuleMgr::OnCalculateSpellMissChance(const Unit* unit, const Unit* victim, uint32 schoolMask, const SpellEntry* spell, float& outChance)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnCalculateSpellMissChance(unit, victim, schoolMask, spell, outChance))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ModuleMgr::OnGetAttackDistance(const Unit* unit, const Unit* target, float& outDistance)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnGetAttackDistance(unit, target, outDistance))
         {
             return true;
         }

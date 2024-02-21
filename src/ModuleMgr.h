@@ -2,6 +2,7 @@
 #define MANGOS_MODULE_MGR_H
 
 #include "Platform/Define.h"
+#include "Entities/Unit.h"
 
 #include <map>
 #include <string>
@@ -14,7 +15,9 @@ class Module;
 class MovementInfo;
 class ObjectGuid;
 class Player;
+class Spell;
 class Quest;
+class Unit;
 class WorldObject;
 
 struct ActionButton;
@@ -24,6 +27,8 @@ struct PlayerLevelInfo;
 struct SpellEntry;
 
 typedef std::map<uint8, ActionButton> ActionButtonList;
+typedef std::array<uint32, NUM_SPELL_PARTIAL_RESISTS> SpellPartialResistChanceEntry;
+typedef std::vector<SpellPartialResistChanceEntry> SpellPartialResistDistribution;
 
 class ModuleMgr
 {

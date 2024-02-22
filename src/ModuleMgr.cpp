@@ -354,6 +354,24 @@ void ModuleMgr::OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info)
     }
 }
 
+void ModuleMgr::OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnSetVisibleItemSlot(player, slot, item);
+    }
+}
+
+void ModuleMgr::OnMoveItemFromInventory(Player* player, Item* item)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnMoveItemFromInventory(player, item);
+    }
+}
+
 bool ModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
 {
     for (const auto& pair : modules)

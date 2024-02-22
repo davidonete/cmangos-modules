@@ -101,6 +101,10 @@ public:
     virtual void OnRewardQuest(Player* player, const Quest* quest) {}
     // Called when retrieving the player level info
     virtual void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info) {}
+    // Called when updating the player equipment visibility
+    virtual void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item) {}
+    // Called when a player moves an item from the inventory
+    virtual void OnMoveItemFromInventory(Player* player, Item* item) {}
 
     // Creature Hooks
     // Called before a creature respawns into the world. Return true to override default logic
@@ -129,9 +133,9 @@ public:
     virtual bool OnGetAttackDistance(const Unit* unit, const Unit* target, float& outDistance) { return false; }
 
 protected:
-    ModuleConfig* GetConfigInternal() { return config; }
+    const ModuleConfig* GetConfigInternal() const { return config; }
     virtual ModuleConfig* CreateConfig() = 0;
-    virtual ModuleConfig* GetConfig() = 0;
+    virtual const ModuleConfig* GetConfig() const = 0;
 
 private:
     ModuleConfig* config;

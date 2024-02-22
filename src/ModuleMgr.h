@@ -65,6 +65,8 @@ public:
     void OnSetReputation(Player* player, const FactionEntry* factionEntry, int32 standing, bool incremental);
     void OnRewardQuest(Player* player, const Quest* quest);
     void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info);
+    void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item);
+    void OnMoveItemFromInventory(Player* player, Item* item);
 
     // Creature Hooks
     bool OnRespawn(Creature* creature, time_t& respawnTime);

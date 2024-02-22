@@ -46,7 +46,7 @@ public:
     bool OnUseItem(Player* player, Item* item);
     bool OnPreGossipHello(Player* player, const ObjectGuid& guid);
     void OnGossipHello(Player* player, const ObjectGuid& guid);
-    bool OnPreGossipSelect(Player* player, const ObjectGuid& guid, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId);
+    bool OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId);
     void OnLearnTalent(Player* player, uint32 spellId);
     void OnResetTalents(Player* player, uint32 cost);
     void OnPreLoadFromDB(uint32 playerId);

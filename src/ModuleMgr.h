@@ -68,6 +68,7 @@ public:
 
     // Creature Hooks
     bool OnRespawn(Creature* creature);
+    void OnRespawnRequest(Creature* creature);
 
     // Game Object Hooks
     bool OnUseFishingNode(GameObject* gameObject, Player* player);

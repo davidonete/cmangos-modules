@@ -326,6 +326,15 @@ bool ModuleMgr::OnRespawn(Creature* creature)
     return false;
 }
 
+void ModuleMgr::OnRespawnRequest(Creature* creature)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnRespawnRequest(creature);
+    }
+}
+
 bool ModuleMgr::OnUseFishingNode(GameObject* gameObject, Player* player)
 {
     for (const auto& pair : modules)

@@ -101,6 +101,8 @@ public:
     // Creature Hooks
     // Called before a creature respawns into the world. Return true to override default logic
     virtual bool OnRespawn(Creature* creature) { return false; }
+    // Called when a creature manual respawn is requested.
+    virtual void OnRespawnRequest(Creature* creature) {}
 
     // Game Object Hooks
     // Called when a player uses a fishing node. Return true to override default logic

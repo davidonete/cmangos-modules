@@ -58,7 +58,7 @@ public:
     // Called after a player opens a dialog
     virtual void OnGossipHello(Player* player, GameObject* gameObject) {}
     // Called after a player opens a dialog
-    virtual void OnGossipHello(Player* player, Creature* gameObject) {}
+    virtual void OnGossipHello(Player* player, Creature* creature) {}
     // Called when a player selects an option on a dialog. Return true to override default logic
     virtual bool OnPreGossipSelect(Player* player, GameObject* gameObject, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId) { return false; }
     // Called when a player selects an option on a dialog. Return true to override default logic

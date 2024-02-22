@@ -52,13 +52,19 @@ public:
     // Called when a player uses an item. Return true to override default logic
     virtual bool OnUseItem(Player* player, Item* item) { return false; }
     // Called when a player opens a dialog. Return true to override default logic
-    virtual bool OnGossipHello(Player* player, Creature* creature) { return false; }
+    virtual bool OnPreGossipHello(Player* player, GameObject* gameObject) { return false; }
+    // Called when a player opens a dialog. Return true to override default logic
+    virtual bool OnPreGossipHello(Player* player, Creature* creature) { return false; }
+    // Called after a player opens a dialog
+    virtual void OnGossipHello(Player* player, GameObject* gameObject) {}
+    // Called after a player opens a dialog
+    virtual void OnGossipHello(Player* player, Creature* gameObject) {}
     // Called when a player selects an option on a dialog. Return true to override default logic
-    virtual bool OnGossipSelect(Player* player, GameObject* gameObject, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId) { return false; }
+    virtual bool OnPreGossipSelect(Player* player, GameObject* gameObject, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId) { return false; }
     // Called when a player selects an option on a dialog. Return true to override default logic
-    virtual bool OnGossipSelect(Player* player, Unit* creature, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId) { return false; }
+    virtual bool OnPreGossipSelect(Player* player, Creature* creature, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId) { return false; }
     // Called when a player selects an option on a dialog. Return true to override default logic
-    virtual bool OnGossipSelect(Player* player, Item* item, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId) { return false; }
+    virtual bool OnPreGossipSelect(Player* player, Item* item, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId) { return false; }
     // Called when a player learns a new talent
     virtual void OnLearnTalent(Player* player, uint32 spellId) {}
     // Called when a player resets his talents

@@ -53,21 +53,54 @@ bool ModuleMgr::OnUseItem(Player* player, Item* item)
     return false;
 }
 
-bool ModuleMgr::OnGossipHello(Player* player, Creature* creature)
+bool ModuleMgr::OnPreGossipHello(Player* player, const ObjectGuid& guid)
 {
-    for (const auto& pair : modules)
+    bool override = false;
+    if (player)
     {
-        Module* module = pair.second;
-        if (module->OnGossipHello(player, creature))
+        if (guid.IsAnyTypeCreature())
         {
-            return true;
+            Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
+            if (creature)
+            {
+                for (const auto& pair : modules)
+                {
+                    Module* module = pair.second;
+                    if (module->OnPreGossipHello(player, creature))
+                    {
+                        override = true;
+                        break;
+                    }
+                }
+            }
+        }
+        else if (guid.IsGameObject())
+        {
+            GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
+            if (gameObject)
+            {
+                for (const auto& pair : modules)
+                {
+                    Module* module = pair.second;
+                    if (module->OnPreGossipHello(player, gameObject))
+                    {
+                        override = true;
+                        break;
+                    }
+                }
+            }
         }
     }
 
-    return false;
+    if (override)
+    {
+        OnGossipHello(player, guid);
+    }
+
+    return override;
 }
 
-bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId)
+bool ModuleMgr::OnPreGossipSelect(Player* player, const ObjectGuid& guid, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId)
 {
     if (player)
     {
@@ -79,7 +112,7 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
                 for (const auto& pair : modules)
                 {
                     Module* module = pair.second;
-                    if (module->OnGossipSelect(player, creature, sender, action, code, gossipListId))
+                    if (module->OnPreGossipSelect(player, creature, sender, action, code, gossipListId))
                     {
                         return true;
                     }
@@ -94,7 +127,7 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
                 for (const auto& pair : modules)
                 {
                     Module* module = pair.second;
-                    if (module->OnGossipSelect(player, gameObject, sender, action, code, gossipListId))
+                    if (module->OnPreGossipSelect(player, gameObject, sender, action, code, gossipListId))
                     {
                         return true;
                     }
@@ -109,7 +142,7 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
                 for (const auto& pair : modules)
                 {
                     Module* module = pair.second;
-                    if (module->OnGossipSelect(player, item, sender, action, code, gossipListId))
+                    if (module->OnPreGossipSelect(player, item, sender, action, code, gossipListId))
                     {
                         return true;
                     }

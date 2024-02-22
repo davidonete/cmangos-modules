@@ -63,7 +63,6 @@ public:
     void OnModifyMoney(Player* player, int32 diff);
     void OnSetReputation(Player* player, const FactionEntry* factionEntry, int32 standing, bool incremental);
     void OnRewardQuest(Player* player, const Quest* quest);
-    bool OnPrepareGossipMenu(Player* player, WorldObject* source, const GossipMenuItems& gossipMenu);
     void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info);
 
     // Creature Hooks

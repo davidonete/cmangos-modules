@@ -93,8 +93,6 @@ public:
     virtual void OnSetReputation(Player* player, const FactionEntry* factionEntry, int32 standing, bool incremental) {}
     // Called when a player receives a quest reward
     virtual void OnRewardQuest(Player* player, const Quest* quest) {}
-    // Called when preparing a player gossip menu. Return true to allow rendering the menu
-    virtual bool OnPrepareGossipMenu(Player* player, WorldObject* source, const GossipMenuItems& gossipMenu) { return false; }
     // Called when retrieving the player level info
     virtual void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info) {}
 

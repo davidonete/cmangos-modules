@@ -289,20 +289,6 @@ void ModuleMgr::OnRewardQuest(Player* player, const Quest* quest)
     }
 }
 
-bool ModuleMgr::OnPrepareGossipMenu(Player* player, WorldObject* source, const GossipMenuItems& gossipMenu)
-{
-    for (const auto& pair : modules)
-    {
-        Module* module = pair.second;
-        if (module->OnPrepareGossipMenu(player, source, gossipMenu))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 void ModuleMgr::OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info)
 {
     for (const auto& pair : modules)

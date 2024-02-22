@@ -312,12 +312,12 @@ void ModuleMgr::OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info)
     }
 }
 
-bool ModuleMgr::OnRespawn(Creature* creature)
+bool ModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
 {
     for (const auto& pair : modules)
     {
         Module* module = pair.second;
-        if (module->OnRespawn(creature))
+        if (module->OnRespawn(creature, respawnTime))
         {
             return true;
         }

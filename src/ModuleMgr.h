@@ -67,7 +67,7 @@ public:
     void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info);
 
     // Creature Hooks
-    bool OnRespawn(Creature* creature);
+    bool OnRespawn(Creature* creature, time_t& respawnTime);
     void OnRespawnRequest(Creature* creature);
 
     // Game Object Hooks

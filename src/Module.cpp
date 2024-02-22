@@ -1,9 +1,11 @@
 #include "Module.h"
 #include "ModuleMgr.h"
 #include "ModuleConfig.h"
+#include "Log.h"
 
 Module::Module(const std::string& name)
 : config(nullptr)
+, name(name)
 {
     sModuleMgr.RegisterModule(this, name);
 }
@@ -16,6 +18,7 @@ Module::~Module()
 
 void Module::Initialize()
 {
+    sLog.outString("Initializing %s module", name.c_str());
     config = CreateConfig();
     config->Load();
     OnInitialize();

@@ -100,6 +100,37 @@ bool ModuleMgr::OnPreGossipHello(Player* player, const ObjectGuid& guid)
     return override;
 }
 
+void ModuleMgr::OnGossipHello(Player* player, const ObjectGuid& guid)
+{
+    if (player)
+    {
+        if (guid.IsAnyTypeCreature())
+        {
+            Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
+            if (creature)
+            {
+                for (const auto& pair : modules)
+                {
+                    Module* module = pair.second;
+                    module->OnGossipHello(player, creature);
+                }
+            }
+        }
+        else if (guid.IsGameObject())
+        {
+            GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
+            if (gameObject)
+            {
+                for (const auto& pair : modules)
+                {
+                    Module* module = pair.second;
+                    module->OnGossipHello(player, gameObject);
+                }
+            }
+        }
+    }
+}
+
 bool ModuleMgr::OnPreGossipSelect(Player* player, const ObjectGuid& guid, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId)
 {
     if (player)

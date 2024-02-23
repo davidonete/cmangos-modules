@@ -36,7 +36,7 @@ typedef std::vector<SpellPartialResistChanceEntry> SpellPartialResistDistributio
 
 class Module
 {
-    friend ModuleMgr;
+    friend class ModuleMgr;
 
 public:
     Module(const std::string& name);

@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+class ChatHandler;
 class Creature;
 class GameObject;
 class Item;
@@ -97,6 +98,9 @@ public:
     bool OnGenerateMoneyLoot(Loot* loot, uint32& outMoney);
     void OnAddItem(Loot* loot, LootItem* lootItem);
     void OnSendGold(Loot* loot, uint32 gold);
+
+    // Chat Commands
+    bool OnExecuteCommand(ChatHandler* chatHandler, const std::string& cmd);
 
 private:
     std::map<std::string, Module*> modules;

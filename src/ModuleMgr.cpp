@@ -603,3 +603,34 @@ void ModuleMgr::OnSendGold(Loot* loot, uint32 gold)
         module->OnSendGold(loot, gold);
     }
 }
+
+bool ModuleMgr::OnExecuteCommand(ChatHandler* chatHandler, const std::string& cmd)
+{
+    if (!cmd.empty())
+    {
+        // Extract the prefix and suffix of the cmd
+        std::string cmdSuffix;
+        std::string cmdPrefix = cmd;
+        size_t spacePos = cmd.find(' ');
+        if (spacePos != std::string::npos)
+        {
+            cmdPrefix = cmd.substr(0, spacePos);
+            cmdSuffix = cmd.substr(spacePos + 1);
+        }
+
+        for (const auto& pair : modules)
+        {
+            Module* module = pair.second;
+            const char* moduleCommandPrefix = module->GetChatCommandPrefix();
+            if (moduleCommandPrefix && moduleCommandPrefix == cmdPrefix)
+            {
+                if (module->HandleChatCommand(chatHandler, cmdSuffix))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}

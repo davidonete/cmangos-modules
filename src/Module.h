@@ -7,6 +7,7 @@
 #include <map>
 #include <string>
 
+class ChatHandler;
 class Creature;
 class GameObject;
 class Item;
@@ -35,6 +36,8 @@ typedef std::vector<SpellPartialResistChanceEntry> SpellPartialResistDistributio
 
 class Module
 {
+    friend ModuleMgr;
+
 public:
     Module(const std::string& name);
     virtual ~Module();
@@ -158,10 +161,15 @@ public:
     // Called when the gold is taken from a loot
     virtual void OnSendGold(Loot* loot, uint32 gold) {}
 
+    // Chat Commands
+    // Called when a chat command is executed. You must set up GetChatCommandPrefix
+    virtual bool HandleChatCommand(ChatHandler* chatHanlder, const std::string& cmd) { return false; }
+
 protected:
     const ModuleConfig* GetConfigInternal() const { return config; }
     virtual ModuleConfig* CreateConfig() = 0;
     virtual const ModuleConfig* GetConfig() const = 0;
+    virtual const char* GetChatCommandPrefix() const { return nullptr; }
 
 private:
     ModuleConfig* config;

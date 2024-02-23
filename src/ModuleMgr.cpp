@@ -205,13 +205,19 @@ void ModuleMgr::OnResetTalents(Player* player, uint32 cost)
     }
 }
 
-void ModuleMgr::OnPreLoadFromDB(uint32 playerId)
+void ModuleMgr::OnPreLoadFromDB(Player* player)
 {
-    for (const auto& pair : modules)
+    if (player)
     {
-        Module* module = pair.second;
-        module->OnPreLoadFromDB(playerId);
+        const uint32 playerId = player->GetObjectGuid().GetCounter();
+        for (const auto& pair : modules)
+        {
+            Module* module = pair.second;
+            module->OnPreLoadFromDB(player);
+            module->OnPreLoadFromDB(playerId);
+        }
     }
+
 }
 
 void ModuleMgr::OnLoadFromDB(Player* player)
@@ -247,6 +253,15 @@ void ModuleMgr::OnLogOut(Player* player)
     {
         Module* module = pair.second;
         module->OnLogOut(player);
+    }
+}
+
+void ModuleMgr::OnPreCharacterCreated(Player* player)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnPreCharacterCreated(player);
     }
 }
 
@@ -414,12 +429,57 @@ void ModuleMgr::OnMoveItemFromInventory(Player* player, Item* item)
     }
 }
 
+void ModuleMgr::OnMoveItemToInventory(Player* player, Item* item)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnMoveItemToInventory(player, item);
+    }
+}
+
 void ModuleMgr::OnStoreNewItem(Player* player, Loot* loot, Item* item)
 {
     for (const auto& pair : modules)
     {
         Module* module = pair.second;
         module->OnStoreNewItem(player, loot, item);
+    }
+}
+
+void ModuleMgr::OnAddSpell(Player* player, uint32 spellId)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnAddSpell(player, spellId);
+    }
+}
+
+void ModuleMgr::OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnDuelComplete(player, opponent, duelCompleteType);
+    }
+}
+
+void ModuleMgr::OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnKilledMonsterCredit(player, entry, guid);
+    }
+}
+
+void ModuleMgr::OnRewardSinglePlayerAtKill(Player* player, Unit* victim)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnRewardSinglePlayerAtKill(player, victim);
     }
 }
 
@@ -602,6 +662,29 @@ void ModuleMgr::OnSendGold(Loot* loot, uint32 gold)
         Module* module = pair.second;
         module->OnSendGold(loot, gold);
     }
+}
+
+void ModuleMgr::OnWriteDump(uint32 playerId, std::string& dump)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnWriteDump(playerId, dump);
+    }
+}
+
+bool ModuleMgr::IsModuleDumpTable(const std::string& dbTableName)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->IsModuleDumpTable(dbTableName))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool ModuleMgr::OnExecuteCommand(ChatHandler* chatHandler, const std::string& cmd)

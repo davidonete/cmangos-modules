@@ -81,6 +81,7 @@ public:
     // Called when a player resets his talents
     virtual void OnResetTalents(Player* player, uint32 cost) {}
     // Called before loading the player from DB
+    virtual void OnPreLoadFromDB(Player* player) {}
     virtual void OnPreLoadFromDB(uint32 playerId) {}
     // Called after the player has been loaded from DB
     virtual void OnLoadFromDB(Player* player) {}
@@ -90,6 +91,8 @@ public:
     virtual void OnDeleteFromDB(uint32 playerId) {}
     // Called when a player logs out of the game
     virtual void OnLogOut(Player* player) {}
+    // Called before a new character is created
+    virtual void OnPreCharacterCreated(Player* player) {}
     // Called when a new character is created
     virtual void OnCharacterCreated(Player* player) {}
     // Called when the action buttons of a character are loaded. Return true to override default logic
@@ -122,8 +125,18 @@ public:
     virtual void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item) {}
     // Called when a player moves an item from the inventory
     virtual void OnMoveItemFromInventory(Player* player, Item* item) {}
+    // Called when a player moves an item to the inventory
+    virtual void OnMoveItemToInventory(Player* player, Item* item) {}
     // Called when a player stores a new item into the inventory
     virtual void OnStoreNewItem(Player* player, Loot* loot, Item* item) {}
+    // Called when a player learns a spell
+    virtual void OnAddSpell(Player* player, uint32 spellId) {}
+    // Called when a duel has completed
+    virtual void OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType) {}
+    // Called when a player kills a creature and receives credit for it
+    virtual void OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid) {}
+    // Called when a player kills a unit and processes the reward
+    virtual void OnRewardSinglePlayerAtKill(Player* player, Unit* victim) {}
 
     // Creature Hooks
     // Called before a creature respawns into the world. Return true to override default logic
@@ -160,6 +173,12 @@ public:
     virtual void OnAddItem(Loot* loot, LootItem* lootItem) {}
     // Called when the gold is taken from a loot
     virtual void OnSendGold(Loot* loot, uint32 gold) {}
+
+    // Player Dump Hooks
+    // Called when dumping a player character
+    virtual void OnWriteDump(uint32 playerId, std::string& dump) {}
+    // Called when loading a player dump file. Return true if loading a dumped module db table
+    virtual bool IsModuleDumpTable(const std::string& dbTableName) { return false; }
 
     // Chat Commands
     // Called when a chat command is executed. You must set up GetChatCommandPrefix

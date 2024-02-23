@@ -54,11 +54,12 @@ public:
     bool OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId);
     void OnLearnTalent(Player* player, uint32 spellId);
     void OnResetTalents(Player* player, uint32 cost);
-    void OnPreLoadFromDB(uint32 playerId);
+    void OnPreLoadFromDB(Player* player);
     void OnLoadFromDB(Player* player);
     void OnSaveToDB(Player* player);
     void OnDeleteFromDB(uint32 playerId);
     void OnLogOut(Player* player);
+    void OnPreCharacterCreated(Player* player);
     void OnCharacterCreated(Player* player);
     bool OnLoadActionButtons(Player* player, ActionButtonList& actionButtons);
     bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons);
@@ -75,7 +76,12 @@ public:
     void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info);
     void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item);
     void OnMoveItemFromInventory(Player* player, Item* item);
+    void OnMoveItemToInventory(Player* player, Item* item);
     void OnStoreNewItem(Player* player, Loot* loot, Item* item);
+    void OnAddSpell(Player* player, uint32 spellId);
+    void OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType);
+    void OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid);
+    void OnRewardSinglePlayerAtKill(Player* player, Unit* victim);
 
     // Creature Hooks
     bool OnRespawn(Creature* creature, time_t& respawnTime);
@@ -98,6 +104,10 @@ public:
     bool OnGenerateMoneyLoot(Loot* loot, uint32& outMoney);
     void OnAddItem(Loot* loot, LootItem* lootItem);
     void OnSendGold(Loot* loot, uint32 gold);
+
+    // Player Dump Hooks
+    void OnWriteDump(uint32 playerId, std::string& dump);
+    bool IsModuleDumpTable(const std::string& dbTableName);
 
     // Chat Commands
     bool OnExecuteCommand(ChatHandler* chatHandler, const std::string& cmd);

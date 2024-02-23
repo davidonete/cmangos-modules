@@ -11,6 +11,7 @@
 class Creature;
 class GameObject;
 class Item;
+class Loot;
 class Module;
 class MovementInfo;
 class ObjectGuid;
@@ -23,8 +24,10 @@ class WorldObject;
 struct ActionButton;
 struct FactionEntry;
 struct GossipMenuItems;
+struct LootItem;
 struct PlayerLevelInfo;
 struct SpellEntry;
+struct WorldSafeLocsEntry;
 
 typedef std::map<uint8, ActionButton> ActionButtonList;
 typedef std::array<uint32, NUM_SPELL_PARTIAL_RESISTS> SpellPartialResistChanceEntry;
@@ -39,6 +42,7 @@ public:
     void RegisterModule(Module* module, const std::string& name);
 
     // World Hooks
+    void OnWorldPreInitialized();
     void OnWorldInitialized();
     void OnWorldUpdated(uint32 elapsed);
 
@@ -58,7 +62,10 @@ public:
     bool OnLoadActionButtons(Player* player, ActionButtonList& actionButtons);
     bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons);
     bool OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ);
+    bool OnPreResurrect(Player* player);
     void OnResurrect(Player* player);
+    void OnReleaseSpirit(Player* player, const WorldSafeLocsEntry* closestGrave);
+    void OnDeath(Player* player, Unit* killer);
     void OnGiveXP(Player* player, uint32 xp, Creature* victim);
     void OnGiveLevel(Player* player, uint32 level);
     void OnModifyMoney(Player* player, int32 diff);
@@ -67,6 +74,7 @@ public:
     void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info);
     void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item);
     void OnMoveItemFromInventory(Player* player, Item* item);
+    void OnStoreNewItem(Player* player, Loot* loot, Item* item);
 
     // Creature Hooks
     bool OnRespawn(Creature* creature, time_t& respawnTime);
@@ -83,6 +91,12 @@ public:
     bool OnCalculateEffectiveMissChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, const Spell* const* currentSpells, const SpellPartialResistDistribution& spellPartialResistDistribution, float& outChance);
     bool OnCalculateSpellMissChance(const Unit* unit, const Unit* victim, uint32 schoolMask, const SpellEntry* spell, float& outChance);
     bool OnGetAttackDistance(const Unit* unit, const Unit* target, float& outDistance);
+
+    // Loot Hooks
+    bool OnFillLoot(Loot* loot, Player* owner);
+    bool OnGenerateMoneyLoot(Loot* loot, uint32& outMoney);
+    void OnAddItem(Loot* loot, LootItem* lootItem);
+    void OnSendGold(Loot* loot, uint32 gold);
 
 private:
     std::map<std::string, Module*> modules;

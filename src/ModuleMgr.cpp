@@ -19,6 +19,16 @@ void ModuleMgr::RegisterModule(Module* module, const std::string& name)
     }
 }
 
+void ModuleMgr::OnWorldPreInitialized()
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->LoadConfig();
+        module->OnWorldPreInitialized();
+    }
+}
+
 void ModuleMgr::OnWorldInitialized()
 {
     for (const auto& pair : modules)
@@ -291,12 +301,44 @@ bool ModuleMgr::OnHandleFall(Player* player, const MovementInfo& movementInfo, f
     return false;
 }
 
+bool ModuleMgr::OnPreResurrect(Player* player)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnPreResurrect(player))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void ModuleMgr::OnResurrect(Player* player)
 {
     for (const auto& pair : modules)
     {
         Module* module = pair.second;
         module->OnResurrect(player);
+    }
+}
+
+void ModuleMgr::OnReleaseSpirit(Player* player, const WorldSafeLocsEntry* closestGrave)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnReleaseSpirit(player, closestGrave);
+    }
+}
+
+void ModuleMgr::OnDeath(Player* player, Unit* killer)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnDeath(player, killer);
     }
 }
 
@@ -369,6 +411,15 @@ void ModuleMgr::OnMoveItemFromInventory(Player* player, Item* item)
     {
         Module* module = pair.second;
         module->OnMoveItemFromInventory(player, item);
+    }
+}
+
+void ModuleMgr::OnStoreNewItem(Player* player, Loot* loot, Item* item)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnStoreNewItem(player, loot, item);
     }
 }
 
@@ -505,4 +556,50 @@ bool ModuleMgr::OnGetAttackDistance(const Unit* unit, const Unit* target, float&
     }
 
     return false;
+}
+
+bool ModuleMgr::OnFillLoot(Loot* loot, Player* owner)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnFillLoot(loot, owner))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ModuleMgr::OnGenerateMoneyLoot(Loot* loot, uint32& outMoney)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnGenerateMoneyLoot(loot, outMoney))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void ModuleMgr::OnAddItem(Loot* loot, LootItem* lootItem)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnAddItem(loot, lootItem);
+    }
+}
+
+void ModuleMgr::OnSendGold(Loot* loot, uint32 gold)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnSendGold(loot, gold);
+    }
 }

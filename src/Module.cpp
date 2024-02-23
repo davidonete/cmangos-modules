@@ -16,10 +16,14 @@ Module::~Module()
     config = nullptr;
 }
 
+void Module::LoadConfig()
+{
+    config = CreateConfig();
+    config->Load();
+}
+
 void Module::Initialize()
 {
     sLog.outString("Initializing %s module", name.c_str());
-    config = CreateConfig();
-    config->Load();
     OnInitialize();
 }

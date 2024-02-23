@@ -10,6 +10,7 @@
 class Creature;
 class GameObject;
 class Item;
+class Loot;
 class Module;
 class ModuleConfig;
 class MovementInfo;
@@ -23,8 +24,10 @@ class WorldObject;
 struct ActionButton;
 struct FactionEntry;
 struct GossipMenuItems;
+struct LootItem;
 struct PlayerLevelInfo;
 struct SpellEntry;
+struct WorldSafeLocsEntry;
 
 typedef std::map<uint8, ActionButton> ActionButtonList;
 typedef std::array<uint32, NUM_SPELL_PARTIAL_RESISTS> SpellPartialResistChanceEntry;
@@ -36,13 +39,18 @@ public:
     Module(const std::string& name);
     virtual ~Module();
 
+    void LoadConfig();
     void Initialize();
 
     // Module Hooks
+    // Use it to initialize module (gets called when OnWorldInitialized)
     virtual void OnInitialize() {}
+    // Used to update the module (gets called when OnWorldUpdated)
     virtual void OnUpdate(uint32 elapsed) {}
 
     // World Hooks
+    // Called before the world loads
+    virtual void OnWorldPreInitialized() {}
     // Called after world has loaded completely
     virtual void OnWorldInitialized() {}
     // Called every time the world updates
@@ -87,8 +95,14 @@ public:
     virtual bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons) { return false; }
     // Called when processing the fall damage of a player. Return true to override default logic
     virtual bool OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ) { return false; }
+    // Called before a player resurrects. Return true to override default logic
+    virtual bool OnPreResurrect(Player* player) { return false; }
     // Called when a player has been resurrected
     virtual void OnResurrect(Player* player) {}
+    // Called when a player releases spirit
+    virtual void OnReleaseSpirit(Player* player, const WorldSafeLocsEntry* closestGrave) {}
+    // Called when a player has died
+    virtual void OnDeath(Player* player, Unit* killer) {}
     // Called when a player receives experience
     virtual void OnGiveXP(Player* player, uint32 xp, Creature* victim) {}
     // Called when a player receives a level
@@ -105,6 +119,8 @@ public:
     virtual void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item) {}
     // Called when a player moves an item from the inventory
     virtual void OnMoveItemFromInventory(Player* player, Item* item) {}
+    // Called when a player stores a new item into the inventory
+    virtual void OnStoreNewItem(Player* player, Loot* loot, Item* item) {}
 
     // Creature Hooks
     // Called before a creature respawns into the world. Return true to override default logic
@@ -131,6 +147,16 @@ public:
     virtual bool OnCalculateSpellMissChance(const Unit* unit, const Unit* victim, uint32 schoolMask, const SpellEntry* spell, float& outChance) { return false; }
     // Called when calculating the attack distance. Return true to override default logic
     virtual bool OnGetAttackDistance(const Unit* unit, const Unit* target, float& outDistance) { return false; }
+
+    // Loot Hooks
+    // Called when generating the loot table. Return true to override default logic
+    virtual bool OnFillLoot(Loot* loot, Player* owner) { return false; }
+    // Called when generating the loot money. Return true to override default logic
+    virtual bool OnGenerateMoneyLoot(Loot* loot, uint32& outMoney) { return false; }
+    // Called when an item gets added into the loot table
+    virtual void OnAddItem(Loot* loot, LootItem* lootItem) {}
+    // Called when the gold is taken from a loot
+    virtual void OnSendGold(Loot* loot, uint32 gold) {}
 
 protected:
     const ModuleConfig* GetConfigInternal() const { return config; }

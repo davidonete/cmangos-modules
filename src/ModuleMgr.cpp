@@ -483,6 +483,65 @@ void ModuleMgr::OnRewardSinglePlayerAtKill(Player* player, Unit* victim)
     }
 }
 
+bool ModuleMgr::OnHandlePageTextQuery(Player* player, const WorldPacket& packet)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnHandlePageTextQuery(player, packet))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void ModuleMgr::OnSetSkill(Player* player, uint16 skillId)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnSetSkill(player, skillId);
+    }
+}
+
+void ModuleMgr::OnRewardHonor(Player* player, Unit* victim)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnRewardHonor(player, victim);
+    }
+}
+
+void ModuleMgr::OnEquipItem(Player* player, Item* item)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnEquipItem(player, item);
+    }
+}
+
+void ModuleMgr::OnTaxiFlightRouteStart(Player* player, const Taxi::Tracker& taxiTracker, bool initial)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnTaxiFlightRouteStart(player, taxiTracker, initial);
+    }
+}
+
+void ModuleMgr::OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker& taxiTracker, bool final)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnTaxiFlightRouteEnd(player, taxiTracker, final);
+    }
+}
+
 bool ModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
 {
     for (const auto& pair : modules)
@@ -618,6 +677,51 @@ bool ModuleMgr::OnGetAttackDistance(const Unit* unit, const Unit* target, float&
     return false;
 }
 
+void ModuleMgr::OnDealDamage(Unit* unit, Unit* victim, uint32 health, uint32 damage)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnDealDamage(unit, victim, health, damage);
+    }
+}
+
+void ModuleMgr::OnKill(Unit* unit, Unit* victim)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnKill(unit, victim);
+    }
+}
+
+void ModuleMgr::OnDealHeal(Unit* unit, Unit* victim, int32 gain, uint32 addHealth)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnDealHeal(unit, victim, gain, addHealth);
+    }
+}
+
+void ModuleMgr::OnHit(Spell* spell, Unit* caster, Unit* victim)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnHit(spell, caster, victim);
+    }
+}
+
+void ModuleMgr::OnCast(Spell* spell, Unit* caster, Unit* victim)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnCast(spell, caster, victim);
+    }
+}
+
 bool ModuleMgr::OnFillLoot(Loot* loot, Player* owner)
 {
     for (const auto& pair : modules)
@@ -661,6 +765,51 @@ void ModuleMgr::OnSendGold(Loot* loot, uint32 gold)
     {
         Module* module = pair.second;
         module->OnSendGold(loot, gold);
+    }
+}
+
+void ModuleMgr::OnHandleLootMasterGive(Loot* loot, Player* target, LootItem* lootItem)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnHandleLootMasterGive(loot, target, lootItem);
+    }
+}
+
+void ModuleMgr::OnPlayerRoll(Loot* loot, Player* player, uint32 itemSlot, uint8 rollType)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnPlayerRoll(loot, player, itemSlot, rollType);
+    }
+}
+
+void ModuleMgr::OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollType, uint8 rollAmount, uint32 itemSlot, uint8 inventoryResult)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnPlayerWinRoll(loot, player, rollType, rollAmount, itemSlot, inventoryResult);
+    }
+}
+
+void ModuleMgr::OnEndBattleGround(BattleGround* battleground, uint32 winnerTeam)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnEndBattleGround(battleground, winnerTeam);
+    }
+}
+
+void ModuleMgr::OnUpdatePlayerScore(BattleGround* battleground, Player* player, uint8 scoreType, uint32 value)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnUpdatePlayerScore(battleground, player, scoreType, value);
     }
 }
 

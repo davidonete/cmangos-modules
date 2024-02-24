@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+class BattleGround;
 class ChatHandler;
 class Creature;
 class GameObject;
@@ -17,10 +18,12 @@ class Module;
 class MovementInfo;
 class ObjectGuid;
 class Player;
-class Spell;
 class Quest;
+class Spell;
+namespace Taxi { class Tracker; }
 class Unit;
 class WorldObject;
+class WorldPacket;
 
 struct ActionButton;
 struct FactionEntry;
@@ -82,6 +85,12 @@ public:
     void OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType);
     void OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid);
     void OnRewardSinglePlayerAtKill(Player* player, Unit* victim);
+    bool OnHandlePageTextQuery(Player* player, const WorldPacket& packet);
+    void OnSetSkill(Player* player, uint16 skillId);
+    void OnRewardHonor(Player* player, Unit* victim);
+    void OnEquipItem(Player* player, Item* item);
+    void OnTaxiFlightRouteStart(Player* player, const Taxi::Tracker& taxiTracker, bool initial);
+    void OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker& taxiTracker, bool final);
 
     // Creature Hooks
     bool OnRespawn(Creature* creature, time_t& respawnTime);
@@ -98,12 +107,26 @@ public:
     bool OnCalculateEffectiveMissChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, const Spell* const* currentSpells, const SpellPartialResistDistribution& spellPartialResistDistribution, float& outChance);
     bool OnCalculateSpellMissChance(const Unit* unit, const Unit* victim, uint32 schoolMask, const SpellEntry* spell, float& outChance);
     bool OnGetAttackDistance(const Unit* unit, const Unit* target, float& outDistance);
+    void OnDealDamage(Unit* unit, Unit* victim, uint32 health, uint32 damage);
+    void OnKill(Unit* unit, Unit* victim);
+    void OnDealHeal(Unit* unit, Unit* victim, int32 gain, uint32 addHealth);
+
+    // Spell Hooks
+    void OnHit(Spell* spell, Unit* caster, Unit* victim);
+    void OnCast(Spell* spell, Unit* caster, Unit* victim);
 
     // Loot Hooks
     bool OnFillLoot(Loot* loot, Player* owner);
     bool OnGenerateMoneyLoot(Loot* loot, uint32& outMoney);
     void OnAddItem(Loot* loot, LootItem* lootItem);
     void OnSendGold(Loot* loot, uint32 gold);
+    void OnHandleLootMasterGive(Loot* loot, Player* target, LootItem* lootItem);
+    void OnPlayerRoll(Loot* loot, Player* player, uint32 itemSlot, uint8 rollType);
+    void OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollType, uint8 rollAmount, uint32 itemSlot, uint8 inventoryResult);
+
+    // Battleground Hooks
+    void OnEndBattleGround(BattleGround* battleground, uint32 winnerTeam);
+    void OnUpdatePlayerScore(BattleGround* battleground, Player* player, uint8 scoreType, uint32 value);
 
     // Player Dump Hooks
     void OnWriteDump(uint32 playerId, std::string& dump);

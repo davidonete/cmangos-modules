@@ -7,6 +7,7 @@
 #include <map>
 #include <string>
 
+class BattleGround;
 class ChatHandler;
 class Creature;
 class GameObject;
@@ -17,10 +18,12 @@ class ModuleConfig;
 class MovementInfo;
 class ObjectGuid;
 class Player;
-class Spell;
 class Quest;
+class Spell;
+namespace Taxi { class Tracker; }
 class Unit;
 class WorldObject;
+class WorldPacket;
 
 struct ActionButton;
 struct FactionEntry;
@@ -59,9 +62,21 @@ public:
     // Called every time the world updates
     virtual void OnWorldUpdated(uint32 elapsed) {}
 
-    // Player Hooks
+    // Player Item Hooks
     // Called when a player uses an item. Return true to override default logic
     virtual bool OnUseItem(Player* player, Item* item) { return false; }
+    // Called when updating the player equipment visibility
+    virtual void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item) {}
+    // Called when a player moves an item from the inventory
+    virtual void OnMoveItemFromInventory(Player* player, Item* item) {}
+    // Called when a player moves an item to the inventory
+    virtual void OnMoveItemToInventory(Player* player, Item* item) {}
+    // Called when a player stores a new item into the inventory
+    virtual void OnStoreNewItem(Player* player, Loot* loot, Item* item) {}
+    // Called when a player equips an item
+    virtual void OnEquipItem(Player* player, Item* item) {}
+
+    // Player Gossip Hooks
     // Called before generating a gossip menu dialog. Return true to override default logic
     virtual bool OnPreGossipHello(Player* player, GameObject* gameObject) { return false; }
     // Called before generating a gossip menu dialog. Return true to override default logic
@@ -76,10 +91,14 @@ public:
     virtual bool OnGossipSelect(Player* player, Creature* creature, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId) { return false; }
     // Called when a player selects an option on a dialog. Return true to override default logic
     virtual bool OnGossipSelect(Player* player, Item* item, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId) { return false; }
+    
+    // Player Talent Hooks
     // Called when a player learns a new talent
     virtual void OnLearnTalent(Player* player, uint32 spellId) {}
     // Called when a player resets his talents
     virtual void OnResetTalents(Player* player, uint32 cost) {}
+
+    // Player DB Hooks
     // Called before loading the player from DB
     virtual void OnPreLoadFromDB(Player* player) {}
     virtual void OnPreLoadFromDB(uint32 playerId) {}
@@ -89,16 +108,22 @@ public:
     virtual void OnSaveToDB(Player* player) {}
     // Called when a character gets deleted
     virtual void OnDeleteFromDB(uint32 playerId) {}
+
+    // Player Session Hooks
     // Called when a player logs out of the game
     virtual void OnLogOut(Player* player) {}
     // Called before a new character is created
     virtual void OnPreCharacterCreated(Player* player) {}
     // Called when a new character is created
     virtual void OnCharacterCreated(Player* player) {}
+
+    // Player Action Button Hooks
     // Called when the action buttons of a character are loaded. Return true to override default logic
     virtual bool OnLoadActionButtons(Player* player, ActionButtonList& actionButtons) { return false; }
     // Called when the action buttons of a character are saved to DB. Return true to override default logic
     virtual bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons) { return false; }
+    
+    // Player Action Hooks
     // Called when processing the fall damage of a player. Return true to override default logic
     virtual bool OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ) { return false; }
     // Called before a player resurrects. Return true to override default logic
@@ -117,26 +142,28 @@ public:
     virtual void OnModifyMoney(Player* player, int32 diff) {}
     // Called when the reputation of a player changes
     virtual void OnSetReputation(Player* player, const FactionEntry* factionEntry, int32 standing, bool incremental) {}
-    // Called when a player receives a quest reward
-    virtual void OnRewardQuest(Player* player, const Quest* quest) {}
     // Called when retrieving the player level info
     virtual void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info) {}
-    // Called when updating the player equipment visibility
-    virtual void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item) {}
-    // Called when a player moves an item from the inventory
-    virtual void OnMoveItemFromInventory(Player* player, Item* item) {}
-    // Called when a player moves an item to the inventory
-    virtual void OnMoveItemToInventory(Player* player, Item* item) {}
-    // Called when a player stores a new item into the inventory
-    virtual void OnStoreNewItem(Player* player, Loot* loot, Item* item) {}
-    // Called when a player learns a spell
-    virtual void OnAddSpell(Player* player, uint32 spellId) {}
+    // Called when a player skill changes
+    virtual void OnSetSkill(Player* player, uint16 skillId) {}
+    // Called when a players kills a unit that rewards honor
+    virtual void OnRewardHonor(Player* player, Unit* victim) {}
     // Called when a duel has completed
     virtual void OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType) {}
     // Called when a player kills a creature and receives credit for it
     virtual void OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid) {}
     // Called when a player kills a unit and processes the reward
     virtual void OnRewardSinglePlayerAtKill(Player* player, Unit* victim) {}
+    // Called when a player requests a page text data. Return true to override default logic
+    virtual bool OnHandlePageTextQuery(Player* player, const WorldPacket& packet) { return false; }
+    // Called when a player receives a quest reward
+    virtual void OnRewardQuest(Player* player, const Quest* quest) {}
+    // Called when a player starts a taxi flight route
+    virtual void OnTaxiFlightRouteStart(Player* player, const Taxi::Tracker& taxiTracker, bool initial) {}
+    // Called when a player finishes a taxi flight route
+    virtual void OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker& taxiTracker, bool final) {}
+    // Called when a player learns a spell
+    virtual void OnAddSpell(Player* player, uint32 spellId) {}
 
     // Creature Hooks
     // Called before a creature respawns into the world. Return true to override default logic
@@ -163,6 +190,18 @@ public:
     virtual bool OnCalculateSpellMissChance(const Unit* unit, const Unit* victim, uint32 schoolMask, const SpellEntry* spell, float& outChance) { return false; }
     // Called when calculating the attack distance. Return true to override default logic
     virtual bool OnGetAttackDistance(const Unit* unit, const Unit* target, float& outDistance) { return false; }
+    // Called when a unit deals damage to another unit
+    virtual void OnDealDamage(Unit* unit, Unit* victim, uint32 health, uint32 damage) {}
+    // Called when a unit kills another unit
+    virtual void OnKill(Unit* unit, Unit* victim) {}
+    // Called when a unit heals another unit
+    virtual void OnDealHeal(Unit* unit, Unit* victim, int32 gain, uint32 addHealth) {}
+
+    // Spell Hooks
+    // Called when a spell hits a unit
+    virtual void OnHit(Spell* spell, Unit* caster, Unit* victim) {}
+    // Called when a spell is casted
+    virtual void OnCast(Spell* spell, Unit* caster, Unit* victim) {}
 
     // Loot Hooks
     // Called when generating the loot table. Return true to override default logic
@@ -173,6 +212,18 @@ public:
     virtual void OnAddItem(Loot* loot, LootItem* lootItem) {}
     // Called when the gold is taken from a loot
     virtual void OnSendGold(Loot* loot, uint32 gold) {}
+    // Called when a Loot Master sends an item to a player
+    virtual void OnHandleLootMasterGive(Loot* loot, Player* target, LootItem* lootItem) {}
+    // Called when a player rolls for an item
+    virtual void OnPlayerRoll(Loot* loot, Player* player, uint32 itemSlot, uint8 rollType) {}
+    // Called when a player wins a roll for an item
+    virtual void OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollType, uint8 rollAmount, uint32 itemSlot, uint8 inventoryResult) {}
+
+    // Battleground Hooks
+    // Called when a battleground ends
+    virtual void OnEndBattleGround(BattleGround* battleground, uint32 winnerTeam) {}
+    // Called when the battleground score gets updated for a player
+    virtual void OnUpdatePlayerScore(BattleGround* battleground, Player* player, uint8 scoreType, uint32 value) {}
 
     // Player Dump Hooks
     // Called when dumping a player character

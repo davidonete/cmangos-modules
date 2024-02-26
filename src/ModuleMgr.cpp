@@ -959,19 +959,21 @@ bool ModuleMgr::OnExecuteCommand(ChatHandler* chatHandler, const std::string& cm
 
         if (!cmdPrefix.empty() && !cmdSuffix.empty())
         {
+            WorldSession* session = chatHandler->GetSession();
             for (const auto& pair : modules)
             {
                 Module* module = pair.second;
                 const char* moduleCommandPrefix = module->GetChatCommandPrefix();
                 if (moduleCommandPrefix && moduleCommandPrefix == cmdPrefix)
                 {
-                    if (module->GetCommandTable())
+                    std::vector<ModuleChatCommand>* commandTable = module->GetCommandTable();
+                    if (commandTable)
                     {
-                        for (auto chatCommand : *module->GetCommandTable())
+                        for (auto chatCommand : *commandTable)
                         {
-                            if (chatCommand.name == cmdSuffix)
+                            if (chatCommand.name == cmdSuffix && session->GetSecurity() >= chatCommand.securityLevel)
                             {
-                                return chatCommand.callback(chatHandler->GetSession(), cmdArgs);
+                                return chatCommand.callback(session, cmdArgs);
                             }
                         }
                     }

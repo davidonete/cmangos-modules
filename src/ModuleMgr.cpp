@@ -357,6 +357,15 @@ void ModuleMgr::OnDeath(Player* player, Unit* killer)
     }
 }
 
+void ModuleMgr::OnDeath(Player* player, uint8 environmentalDamageType)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnDeath(player, environmentalDamageType);
+    }
+}
+
 void ModuleMgr::OnGiveXP(Player* player, uint32 xp, Creature* victim)
 {
     for (const auto& pair : modules)
@@ -506,12 +515,12 @@ bool ModuleMgr::OnHandlePageTextQuery(Player* player, const WorldPacket& packet)
     return false;
 }
 
-void ModuleMgr::OnSetSkill(Player* player, uint16 skillId)
+void ModuleMgr::OnUpdateSkill(Player* player, uint16 skillId)
 {
     for (const auto& pair : modules)
     {
         Module* module = pair.second;
-        module->OnSetSkill(player, skillId);
+        module->OnUpdateSkill(player, skillId);
     }
 }
 
@@ -786,12 +795,12 @@ void ModuleMgr::OnAddItem(Loot* loot, LootItem* lootItem)
     }
 }
 
-void ModuleMgr::OnSendGold(Loot* loot, uint32 gold)
+void ModuleMgr::OnSendGold(Loot* loot, Player* player, uint32 gold, uint8 lootMethod)
 {
     for (const auto& pair : modules)
     {
         Module* module = pair.second;
-        module->OnSendGold(loot, gold);
+        module->OnSendGold(loot, player, gold, lootMethod);
     }
 }
 
@@ -900,6 +909,51 @@ void ModuleMgr::OnBuyBackItem(Player* player, Item* item, uint32 money)
     {
         Module* module = pair.second;
         module->OnBuyBackItem(player, item, money);
+    }
+}
+
+void ModuleMgr::OnSummoned(Player* player, const ObjectGuid& summoner)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnSummoned(player, summoner);
+    }
+}
+
+void ModuleMgr::OnAreaExplored(Player* player, uint32 areaId)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnAreaExplored(player, areaId);
+    }
+}
+
+void ModuleMgr::OnUpdateHonor(Player* player)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnUpdateHonor(player);
+    }
+}
+
+void ModuleMgr::OnSendMail(Player* player, const ObjectGuid& receiver, uint32 cost)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnSendMail(player, receiver, cost);
+    }
+}
+
+void ModuleMgr::OnAbandonQuest(Player* player, uint32 questId)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnAbandonQuest(player, questId);
     }
 }
 

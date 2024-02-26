@@ -149,6 +149,8 @@ public:
     virtual void OnReleaseSpirit(Player* player, const WorldSafeLocsEntry* closestGrave) {}
     // Called when a player has died
     virtual void OnDeath(Player* player, Unit* killer) {}
+    // Called when a player has died from environment damage
+    virtual void OnDeath(Player* player, uint8 environmentalDamageType) {}
     // Called when a player receives experience
     virtual void OnGiveXP(Player* player, uint32 xp, Creature* victim) {}
     // Called when a player receives a level
@@ -160,7 +162,7 @@ public:
     // Called when retrieving the player level info
     virtual void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info) {}
     // Called when a player skill changes
-    virtual void OnSetSkill(Player* player, uint16 skillId) {}
+    virtual void OnUpdateSkill(Player* player, uint16 skillId) {}
     // Called when a players kills a unit that rewards honor
     virtual void OnRewardHonor(Player* player, Unit* victim) {}
     // Called when a duel has completed
@@ -183,6 +185,16 @@ public:
     virtual void OnEmote(Player* player, Unit* target, uint32 emote) {}
     // Called when a player buys a bank slot
     virtual void OnBuyBankSlot(Player* player, uint32 slot, uint32 price) {}
+    // Called before a player gets summoned
+    virtual void OnSummoned(Player* player, const ObjectGuid& summoner) {}
+    // Called when a player explores a new area
+    virtual void OnAreaExplored(Player* player, uint32 areaId) {}
+    // Called when updating player honor
+    virtual void OnUpdateHonor(Player* player) {}
+    // Called when a player sends a mail
+    virtual void OnSendMail(Player* player, const ObjectGuid& receiver, uint32 cost) {}
+    // Called when a player abandons a quest
+    virtual void OnAbandonQuest(Player* player, uint32 questId) {}
 
     // Creature Hooks
     // Called before a creature respawns into the world. Return true to override default logic
@@ -230,7 +242,7 @@ public:
     // Called when an item gets added into the loot table
     virtual void OnAddItem(Loot* loot, LootItem* lootItem) {}
     // Called when the gold is taken from a loot
-    virtual void OnSendGold(Loot* loot, uint32 gold) {}
+    virtual void OnSendGold(Loot* loot, Player* player, uint32 gold, uint8 lootMethod) {}
     // Called when a Loot Master sends an item to a player
     virtual void OnHandleLootMasterGive(Loot* loot, Player* target, LootItem* lootItem) {}
     // Called when a player rolls for an item

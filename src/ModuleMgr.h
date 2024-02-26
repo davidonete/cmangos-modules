@@ -73,6 +73,7 @@ public:
     void OnResurrect(Player* player);
     void OnReleaseSpirit(Player* player, const WorldSafeLocsEntry* closestGrave);
     void OnDeath(Player* player, Unit* killer);
+    void OnDeath(Player* player, uint8 environmentalDamageType);
     void OnGiveXP(Player* player, uint32 xp, Creature* victim);
     void OnGiveLevel(Player* player, uint32 level);
     void OnModifyMoney(Player* player, int32 diff);
@@ -89,7 +90,7 @@ public:
     void OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid);
     void OnRewardSinglePlayerAtKill(Player* player, Unit* victim);
     bool OnHandlePageTextQuery(Player* player, const WorldPacket& packet);
-    void OnSetSkill(Player* player, uint16 skillId);
+    void OnUpdateSkill(Player* player, uint16 skillId);
     void OnRewardHonor(Player* player, Unit* victim);
     void OnEquipItem(Player* player, Item* item);
     void OnTaxiFlightRouteStart(Player* player, const Taxi::Tracker& taxiTracker, bool initial);
@@ -98,6 +99,11 @@ public:
     void OnBuyBankSlot(Player* player, uint32 slot, uint32 price);
     void OnSellItem(Player* player, Item* item, uint32 money);
     void OnBuyBackItem(Player* player, Item* item, uint32 money);
+    void OnSummoned(Player* player, const ObjectGuid& summoner);
+    void OnAreaExplored(Player* player, uint32 areaId);
+    void OnUpdateHonor(Player* player);
+    void OnSendMail(Player* player, const ObjectGuid& receiver, uint32 cost);
+    void OnAbandonQuest(Player* player, uint32 questId);
 
     // Creature Hooks
     bool OnRespawn(Creature* creature, time_t& respawnTime);
@@ -126,7 +132,7 @@ public:
     bool OnFillLoot(Loot* loot, Player* owner);
     bool OnGenerateMoneyLoot(Loot* loot, uint32& outMoney);
     void OnAddItem(Loot* loot, LootItem* lootItem);
-    void OnSendGold(Loot* loot, uint32 gold);
+    void OnSendGold(Loot* loot, Player* player, uint32 gold, uint8 lootMethod);
     void OnHandleLootMasterGive(Loot* loot, Player* target, LootItem* lootItem);
     void OnPlayerRoll(Loot* loot, Player* player, uint32 itemSlot, uint8 rollType);
     void OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollType, uint8 rollAmount, uint32 itemSlot, uint8 inventoryResult);

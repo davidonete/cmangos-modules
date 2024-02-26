@@ -9,6 +9,7 @@
 #include <vector>
 
 class BattleGround;
+class BattleGroundWS;
 class ChatHandler;
 class Creature;
 class GameObject;
@@ -26,6 +27,7 @@ class WorldObject;
 class WorldPacket;
 
 struct ActionButton;
+struct AuctionEntry;
 struct FactionEntry;
 struct GossipMenuItems;
 struct LootItem;
@@ -81,6 +83,7 @@ public:
     void OnMoveItemFromInventory(Player* player, Item* item);
     void OnMoveItemToInventory(Player* player, Item* item);
     void OnStoreNewItem(Player* player, Loot* loot, Item* item);
+    void OnStoreNewItem(Player* player, Item* item);
     void OnAddSpell(Player* player, uint32 spellId);
     void OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType);
     void OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid);
@@ -91,13 +94,17 @@ public:
     void OnEquipItem(Player* player, Item* item);
     void OnTaxiFlightRouteStart(Player* player, const Taxi::Tracker& taxiTracker, bool initial);
     void OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker& taxiTracker, bool final);
+    void OnEmote(Player* player, Unit* target, uint32 emote);
+    void OnBuyBankSlot(Player* player, uint32 slot, uint32 price);
+    void OnSellItem(Player* player, Item* item, uint32 money);
+    void OnBuyBackItem(Player* player, Item* item, uint32 money);
 
     // Creature Hooks
     bool OnRespawn(Creature* creature, time_t& respawnTime);
     void OnRespawnRequest(Creature* creature);
 
     // Game Object Hooks
-    bool OnUseFishingNode(GameObject* gameObject, Player* player);
+    bool OnUse(GameObject* gameObject, Unit* user);
 
     // Unit Hooks
     bool OnCalculateEffectiveDodgeChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance);
@@ -125,8 +132,16 @@ public:
     void OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollType, uint8 rollAmount, uint32 itemSlot, uint8 inventoryResult);
 
     // Battleground Hooks
+    void OnStartBattleGround(BattleGround* battleground);
     void OnEndBattleGround(BattleGround* battleground, uint32 winnerTeam);
     void OnUpdatePlayerScore(BattleGround* battleground, Player* player, uint8 scoreType, uint32 value);
+    void OnLeaveBattleGround(BattleGround* battleground, Player* player);
+    void OnJoinBattleGround(BattleGround* battleground, Player* player);
+    void OnPickUpFlag(BattleGroundWS* battleground, Player* player, uint32 team);
+
+    // Auction House Hooks
+    void OnSellItem(AuctionEntry* auctionEntry, Player* player);
+    void OnUpdateBid(AuctionEntry* auctionEntry, Player* player, uint32 newBid);
 
     // Player Dump Hooks
     void OnWriteDump(uint32 playerId, std::string& dump);

@@ -8,6 +8,7 @@
 #include <string>
 
 class BattleGround;
+class BattleGroundWS;
 class ChatHandler;
 class Creature;
 class GameObject;
@@ -26,6 +27,7 @@ class WorldObject;
 class WorldPacket;
 
 struct ActionButton;
+struct AuctionEntry;
 struct FactionEntry;
 struct GossipMenuItems;
 struct LootItem;
@@ -36,6 +38,13 @@ struct WorldSafeLocsEntry;
 typedef std::map<uint8, ActionButton> ActionButtonList;
 typedef std::array<uint32, NUM_SPELL_PARTIAL_RESISTS> SpellPartialResistChanceEntry;
 typedef std::vector<SpellPartialResistChanceEntry> SpellPartialResistDistribution;
+
+struct ModuleChatCommand
+{
+    std::string name;
+    std::function<bool(WorldSession*, const std::string&)> callback;
+    uint32 securityLevel;
+};
 
 class Module
 {
@@ -71,10 +80,16 @@ public:
     virtual void OnMoveItemFromInventory(Player* player, Item* item) {}
     // Called when a player moves an item to the inventory
     virtual void OnMoveItemToInventory(Player* player, Item* item) {}
-    // Called when a player stores a new item into the inventory
+    // Called when a player stores a new item into the inventory by looting
     virtual void OnStoreNewItem(Player* player, Loot* loot, Item* item) {}
+    // Called when a player stores a new item into the inventory
+    virtual void OnStoreNewItem(Player* player, Item* item) {}
     // Called when a player equips an item
     virtual void OnEquipItem(Player* player, Item* item) {}
+    // Called when a player sells an item to a vendor
+    virtual void OnSellItem(Player* player, Item* item, uint32 money) {}
+    // Called when a player buys back a sold item from a vendor
+    virtual void OnBuyBackItem(Player* player, Item* item, uint32 money) {}
 
     // Player Gossip Hooks
     // Called before generating a gossip menu dialog. Return true to override default logic
@@ -164,6 +179,10 @@ public:
     virtual void OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker& taxiTracker, bool final) {}
     // Called when a player learns a spell
     virtual void OnAddSpell(Player* player, uint32 spellId) {}
+    // Called when a player makes an emote
+    virtual void OnEmote(Player* player, Unit* target, uint32 emote) {}
+    // Called when a player buys a bank slot
+    virtual void OnBuyBankSlot(Player* player, uint32 slot, uint32 price) {}
 
     // Creature Hooks
     // Called before a creature respawns into the world. Return true to override default logic
@@ -172,8 +191,8 @@ public:
     virtual void OnRespawnRequest(Creature* creature) {}
 
     // Game Object Hooks
-    // Called when a player uses a fishing node. Return true to override default logic
-    virtual bool OnUseFishingNode(GameObject* gameObject, Player* player) { return false; }
+    // Called when a unit uses a game object. Return true to override default logic
+    virtual bool OnUse(GameObject* gameObject, Unit* user) { return false; }
 
     // Unit Hooks
     // Called when calculating the effective dodge chance of an attack. Return true to override default logic
@@ -220,10 +239,24 @@ public:
     virtual void OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollType, uint8 rollAmount, uint32 itemSlot, uint8 inventoryResult) {}
 
     // Battleground Hooks
+    // Called when a battleground starts
+    virtual void OnStartBattleGround(BattleGround* battleground) {}
     // Called when a battleground ends
     virtual void OnEndBattleGround(BattleGround* battleground, uint32 winnerTeam) {}
     // Called when the battleground score gets updated for a player
     virtual void OnUpdatePlayerScore(BattleGround* battleground, Player* player, uint8 scoreType, uint32 value) {}
+    // Called when a player leaves a battleground
+    virtual void OnLeaveBattleGround(BattleGround* battleground, Player*player) {}
+    // Called when a player joins a battleground
+    virtual void OnJoinBattleGround(BattleGround* battleground, Player* player) {}
+    // Called when a player picks up the flag from the base
+    virtual void OnPickUpFlag(BattleGroundWS* battleground, Player* player, uint32 team) {}
+
+    // Auction House Hooks
+    // Called when a player puts an item for sale into the auction house
+    virtual void OnSellItem(AuctionEntry* auctionEntry, Player* player) {}
+    // Called when a player puts a bid for an auction item
+    virtual void OnUpdateBid(AuctionEntry* auctionEntry, Player* player, uint32 newBid) {}
 
     // Player Dump Hooks
     // Called when dumping a player character
@@ -232,14 +265,14 @@ public:
     virtual bool IsModuleDumpTable(const std::string& dbTableName) { return false; }
 
     // Chat Commands
-    // Called when a chat command is executed. You must set up GetChatCommandPrefix
-    virtual bool HandleChatCommand(ChatHandler* chatHanlder, const std::string& cmd) { return false; }
+    // Override these to enable chat commands for the module
+    virtual const char* GetChatCommandPrefix() const { return nullptr; }
+    virtual std::vector<ModuleChatCommand>* GetCommandTable() { return nullptr; }
 
 protected:
     const ModuleConfig* GetConfigInternal() const { return config; }
     virtual ModuleConfig* CreateConfig() = 0;
     virtual const ModuleConfig* GetConfig() const = 0;
-    virtual const char* GetChatCommandPrefix() const { return nullptr; }
 
 private:
     ModuleConfig* config;

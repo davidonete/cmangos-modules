@@ -447,6 +447,15 @@ void ModuleMgr::OnStoreNewItem(Player* player, Loot* loot, Item* item)
     }
 }
 
+void ModuleMgr::OnStoreNewItem(Player* player, Item* item)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnStoreNewItem(player, item);
+    }
+}
+
 void ModuleMgr::OnAddSpell(Player* player, uint32 spellId)
 {
     for (const auto& pair : modules)
@@ -542,6 +551,24 @@ void ModuleMgr::OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker& taxiTr
     }
 }
 
+void ModuleMgr::OnEmote(Player* player, Unit* target, uint32 emote)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnEmote(player, target, emote);
+    }
+}
+
+void ModuleMgr::OnBuyBankSlot(Player* player, uint32 slot, uint32 price)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnBuyBankSlot(player, slot, price);
+    }
+}
+
 bool ModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
 {
     for (const auto& pair : modules)
@@ -565,12 +592,12 @@ void ModuleMgr::OnRespawnRequest(Creature* creature)
     }
 }
 
-bool ModuleMgr::OnUseFishingNode(GameObject* gameObject, Player* player)
+bool ModuleMgr::OnUse(GameObject* gameObject, Unit* user)
 {
     for (const auto& pair : modules)
     {
         Module* module = pair.second;
-        if (module->OnUseFishingNode(gameObject, player))
+        if (module->OnUse(gameObject, user))
         {
             return true;
         }
@@ -795,6 +822,15 @@ void ModuleMgr::OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollType, uint
     }
 }
 
+void ModuleMgr::OnStartBattleGround(BattleGround* battleground)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnStartBattleGround(battleground);
+    }
+}
+
 void ModuleMgr::OnEndBattleGround(BattleGround* battleground, uint32 winnerTeam)
 {
     for (const auto& pair : modules)
@@ -810,6 +846,69 @@ void ModuleMgr::OnUpdatePlayerScore(BattleGround* battleground, Player* player, 
     {
         Module* module = pair.second;
         module->OnUpdatePlayerScore(battleground, player, scoreType, value);
+    }
+}
+
+void ModuleMgr::OnLeaveBattleGround(BattleGround* battleground, Player* player)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnLeaveBattleGround(battleground, player);
+    }
+}
+
+void ModuleMgr::OnJoinBattleGround(BattleGround* battleground, Player* player)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnJoinBattleGround(battleground, player);
+    }
+}
+
+void ModuleMgr::OnPickUpFlag(BattleGroundWS* battleground, Player* player, uint32 team)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnPickUpFlag(battleground, player, team);
+    }
+}
+
+void ModuleMgr::OnSellItem(AuctionEntry* auctionEntry, Player* player)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnSellItem(auctionEntry, player);
+    }
+}
+
+void ModuleMgr::OnSellItem(Player* player, Item* item, uint32 money)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnSellItem(player, item, money);
+    }
+}
+
+void ModuleMgr::OnBuyBackItem(Player* player, Item* item, uint32 money)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnBuyBackItem(player, item, money);
+    }
+}
+
+void ModuleMgr::OnUpdateBid(AuctionEntry* auctionEntry, Player* player, uint32 newBid)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnUpdateBid(auctionEntry, player, newBid);
     }
 }
 
@@ -841,24 +940,41 @@ bool ModuleMgr::OnExecuteCommand(ChatHandler* chatHandler, const std::string& cm
     if (!cmd.empty())
     {
         // Extract the prefix and suffix of the cmd
-        std::string cmdSuffix;
+        std::string cmdSuffix, cmdArgs;
         std::string cmdPrefix = cmd;
         size_t spacePos = cmd.find(' ');
         if (spacePos != std::string::npos)
         {
             cmdPrefix = cmd.substr(0, spacePos);
             cmdSuffix = cmd.substr(spacePos + 1);
+
+            // Extract possible extra args from suffix
+            spacePos = cmdSuffix.find(' ');
+            if (spacePos != std::string::npos);
+            {
+                cmdArgs = cmdSuffix.substr(spacePos + 1);
+                cmdSuffix = cmdSuffix.substr(0, spacePos);
+            }
         }
 
-        for (const auto& pair : modules)
+        if (!cmdPrefix.empty() && !cmdSuffix.empty())
         {
-            Module* module = pair.second;
-            const char* moduleCommandPrefix = module->GetChatCommandPrefix();
-            if (moduleCommandPrefix && moduleCommandPrefix == cmdPrefix)
+            for (const auto& pair : modules)
             {
-                if (module->HandleChatCommand(chatHandler, cmdSuffix))
+                Module* module = pair.second;
+                const char* moduleCommandPrefix = module->GetChatCommandPrefix();
+                if (moduleCommandPrefix && moduleCommandPrefix == cmdPrefix)
                 {
-                    return true;
+                    if (module->GetCommandTable())
+                    {
+                        for (auto chatCommand : *module->GetCommandTable())
+                        {
+                            if (chatCommand.name == cmdSuffix)
+                            {
+                                return chatCommand.callback(chatHandler->GetSession(), cmdArgs);
+                            }
+                        }
+                    }
                 }
             }
         }

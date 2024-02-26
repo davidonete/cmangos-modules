@@ -1004,7 +1004,7 @@ bool ModuleMgr::OnExecuteCommand(ChatHandler* chatHandler, const std::string& cm
 
             // Extract possible extra args from suffix
             spacePos = cmdSuffix.find(' ');
-            if (spacePos != std::string::npos);
+            if (spacePos != std::string::npos)
             {
                 cmdArgs = cmdSuffix.substr(spacePos + 1);
                 cmdSuffix = cmdSuffix.substr(0, spacePos);

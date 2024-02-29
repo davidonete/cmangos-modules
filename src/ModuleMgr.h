@@ -83,8 +83,8 @@ public:
     void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item);
     void OnMoveItemFromInventory(Player* player, Item* item);
     void OnMoveItemToInventory(Player* player, Item* item);
-    void OnStoreNewItem(Player* player, Loot* loot, Item* item);
-    void OnStoreNewItem(Player* player, Item* item);
+    void OnStoreItem(Player* player, Loot* loot, Item* item);
+    void OnStoreItem(Player* player, Item* item);
     void OnAddSpell(Player* player, uint32 spellId);
     void OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType);
     void OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid);

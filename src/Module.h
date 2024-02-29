@@ -80,10 +80,10 @@ public:
     virtual void OnMoveItemFromInventory(Player* player, Item* item) {}
     // Called when a player moves an item to the inventory
     virtual void OnMoveItemToInventory(Player* player, Item* item) {}
-    // Called when a player stores a new item into the inventory by looting
-    virtual void OnStoreNewItem(Player* player, Loot* loot, Item* item) {}
-    // Called when a player stores a new item into the inventory
-    virtual void OnStoreNewItem(Player* player, Item* item) {}
+    // Called when a player stores an item into the inventory from looting
+    virtual void OnStoreItem(Player* player, Loot* loot, Item* item) {}
+    // Called when a player stores an item into the inventory
+    virtual void OnStoreItem(Player* player, Item* item) {}
     // Called when a player equips an item
     virtual void OnEquipItem(Player* player, Item* item) {}
     // Called when a player sells an item to a vendor

@@ -447,21 +447,21 @@ void ModuleMgr::OnMoveItemToInventory(Player* player, Item* item)
     }
 }
 
-void ModuleMgr::OnStoreNewItem(Player* player, Loot* loot, Item* item)
+void ModuleMgr::OnStoreItem(Player* player, Loot* loot, Item* item)
 {
     for (const auto& pair : modules)
     {
         Module* module = pair.second;
-        module->OnStoreNewItem(player, loot, item);
+        module->OnStoreItem(player, loot, item);
     }
 }
 
-void ModuleMgr::OnStoreNewItem(Player* player, Item* item)
+void ModuleMgr::OnStoreItem(Player* player, Item* item)
 {
     for (const auto& pair : modules)
     {
         Module* module = pair.second;
-        module->OnStoreNewItem(player, item);
+        module->OnStoreItem(player, item);
     }
 }
 

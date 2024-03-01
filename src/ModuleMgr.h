@@ -66,7 +66,9 @@ public:
     void OnLogOut(Player* player);
     void OnPreCharacterCreated(Player* player);
     void OnCharacterCreated(Player* player);
+    bool OnLoadActionButtons(Player* player, ActionButtonList (&actionButtons)[2]);
     bool OnLoadActionButtons(Player* player, ActionButtonList& actionButtons);
+    bool OnSaveActionButtons(Player* player, ActionButtonList(&actionButtons)[2]);
     bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons);
     bool OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ);
     bool OnPreResurrect(Player* player);

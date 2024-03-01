@@ -46,6 +46,9 @@ target_link_libraries(${LIBRARY_NAME}
 	RecastNavigation::Detour
 )
 
+include_directories(${CMAKE_SOURCE_DIR}/dep/g3dlite)
+add_definitions(-DENABLE_MODULES)
+
 if(UNIX)
 	# Both systems don't have libdl and don't need them
 	if (NOT (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD"))

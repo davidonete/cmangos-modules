@@ -292,6 +292,29 @@ bool ModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList& actionButt
     return overriden;
 }
 
+bool ModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList(&actionButtons)[2])
+{
+    bool overriden = false;
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        for (auto& actionButton : actionButtons)
+        {
+            if (module->OnLoadActionButtons(player, actionButton))
+            {
+                overriden = true;
+            }
+        }
+
+        if (overriden)
+        {
+            break;
+        }
+    }
+
+    return overriden;
+}
+
 bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList& actionButtons)
 {
     bool overriden = false;
@@ -301,6 +324,29 @@ bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList& actionButt
         if (module->OnSaveActionButtons(player, actionButtons))
         {
             overriden = true;
+        }
+    }
+
+    return overriden;
+}
+
+bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList(&actionButtons)[2])
+{
+    bool overriden = false;
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        for (auto& actionButton : actionButtons)
+        {
+            if (module->OnSaveActionButtons(player, actionButton))
+            {
+                overriden = true;
+            }
+        }
+
+        if (overriden)
+        {
+            break;
         }
     }
 

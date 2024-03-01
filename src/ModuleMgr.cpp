@@ -353,19 +353,28 @@ bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList(&actionButt
     return overriden;
 }
 
-bool ModuleMgr::OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ)
+bool ModuleMgr::OnPreHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32& outDamage)
 {
     bool overriden = false;
     for (const auto& pair : modules)
     {
         Module* module = pair.second;
-        if (module->OnHandleFall(player, movementInfo, lastFallZ))
+        if (module->OnPreHandleFall(player, movementInfo, lastFallZ, outDamage))
         {
             overriden = true;
         }
     }
 
     return overriden;
+}
+
+void ModuleMgr::OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32 damage)
+{
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        module->OnHandleFall(player, movementInfo, lastFallZ, damage);
+    }
 }
 
 bool ModuleMgr::OnPreResurrect(Player* player)

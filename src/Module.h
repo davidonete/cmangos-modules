@@ -139,8 +139,10 @@ public:
     virtual bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons) { return false; }
     
     // Player Action Hooks
-    // Called when processing the fall damage of a player. Return true to override default logic
-    virtual bool OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ) { return false; }
+    // Called before processing the fall damage of a player. Return true to override default logic
+    virtual bool OnPreHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32& outDamage) { return false; }
+    // Called after processing the fall damage of a player
+    virtual void OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32 damage) {}
     // Called before a player resurrects. Return true to override default logic
     virtual bool OnPreResurrect(Player* player) { return false; }
     // Called when a player has been resurrected

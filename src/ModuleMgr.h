@@ -70,7 +70,8 @@ public:
     bool OnLoadActionButtons(Player* player, ActionButtonList& actionButtons);
     bool OnSaveActionButtons(Player* player, ActionButtonList(&actionButtons)[2]);
     bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons);
-    bool OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ);
+    bool OnPreHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32& outDamage);
+    void OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32 damage);
     bool OnPreResurrect(Player* player);
     void OnResurrect(Player* player);
     void OnReleaseSpirit(Player* player, const WorldSafeLocsEntry* closestGrave);

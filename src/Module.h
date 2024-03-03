@@ -171,8 +171,10 @@ public:
     virtual void OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType) {}
     // Called when a player kills a creature and receives credit for it
     virtual void OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid) {}
-    // Called when a player kills a unit and processes the reward
-    virtual void OnRewardSinglePlayerAtKill(Player* player, Unit* victim) {}
+    // Called when a player kills a unit and before it processes the reward. Return true to override default logic
+    virtual bool OnPreRewardPlayerAtKill(Player* player, Unit* victim) { return false; }
+    // Called when a player not in a group kills a unit and processes the reward
+    virtual void OnRewardPlayerAtKill(Player* player, Unit* victim) {}
     // Called when a player requests a page text data. Return true to override default logic
     virtual bool OnHandlePageTextQuery(Player* player, const WorldPacket& packet) { return false; }
     // Called when a player receives a quest reward

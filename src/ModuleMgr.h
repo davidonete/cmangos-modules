@@ -91,7 +91,8 @@ public:
     void OnAddSpell(Player* player, uint32 spellId);
     void OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType);
     void OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid);
-    void OnRewardSinglePlayerAtKill(Player* player, Unit* victim);
+    bool OnPreRewardPlayerAtKill(Player* player, Unit* victim);
+    void OnRewardPlayerAtKill(Player* player, Unit* victim);
     bool OnHandlePageTextQuery(Player* player, const WorldPacket& packet);
     void OnUpdateSkill(Player* player, uint16 skillId);
     void OnRewardHonor(Player* player, Unit* victim);

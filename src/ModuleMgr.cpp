@@ -554,12 +554,27 @@ void ModuleMgr::OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& 
     }
 }
 
-void ModuleMgr::OnRewardSinglePlayerAtKill(Player* player, Unit* victim)
+bool ModuleMgr::OnPreRewardPlayerAtKill(Player* player, Unit* victim)
+{
+    bool overriden = false;
+    for (const auto& pair : modules)
+    {
+        Module* module = pair.second;
+        if (module->OnPreRewardPlayerAtKill(player, victim))
+        {
+            overriden = true;
+        }
+    }
+
+    return overriden;
+}
+
+void ModuleMgr::OnRewardPlayerAtKill(Player* player, Unit* victim)
 {
     for (const auto& pair : modules)
     {
         Module* module = pair.second;
-        module->OnRewardSinglePlayerAtKill(player, victim);
+        module->OnRewardPlayerAtKill(player, victim);
     }
 }
 

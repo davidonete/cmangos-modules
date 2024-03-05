@@ -21,8 +21,20 @@ This guide will use the source code where all the module code is already in plac
 2.  Once you have it cloned continue following the guide until you reach the [Compiling CMangos section](https://github.com/cmangos/issues/wiki/Installation-Instructions#compiling-cmangos-windows). In this section you will have to define the flags for enabling the module system as well as the individual modules that you want to compile. The flag required for each module can be found on the installation instructions for each module. Example:
 
 ```
-cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DBUILD_SCRIPTDEV=ON -DPCH=ON -DBUILD_MODULES -DBUILD_MODULE_ACHIEVEMENTS=ON -DBUILD_MODULE_IMMERSIVE=ON
+cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DBUILD_MODULES -DBUILD_MODULE_ACHIEVEMENTS=ON -DBUILD_MODULE_IMMERSIVE=ON
 ```
+
+If you want to generate the visual studio solution instead you can do it with either the Cmake UI:
+- Select the project folder, click configure and wait for it to load.
+- Click on BUILD_MODULES and click configure again and wait for it to load.
+- Find the modules you would want to install (e.g. BUILD_MODULE_TRANSMOG) enable them and click configure again.
+- After everything is loaded click generate and open the solution and build it from visual studio
+
+You can also generate the solution via command line using the following command:
+```
+cmake . -G "Visual Studio 16 2019" -A x64 -B bin/BuildDir -DBUILD_MODULES=ON -DBUILD_MODULE_TRANSMOG=ON
+```
+Where `-G "Visual Studio 16 2019"` is the visual studio version you have, `-B bin/BuildDir` is where the solution will get generated and `-DBUILD_MODULES=ON -DBUILD_MODULE_TRANSMOG=ON` are the modules you want to enable.
 
 3.  Continue with the installation guide up to the [Install Database section](https://github.com/cmangos/issues/wiki/Installation-Instructions#install-databases). After you finish that step, don't run the game yet! You will need to install the required database changes for each module you enabled. Follow the install instructions of each module for more information.
 4.  Lastly before finishing the installation guide remember to copy the configuration files of each module (located in `src/modules/<module>/src/<module>.conf.dist.in`) into the binary folder of the cmangos executables (where `mangosd.conf`is) and edit it to enable it and modify the configuration with your needs. After that finish the installation guide and you should be ready to go!

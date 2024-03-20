@@ -1,7 +1,6 @@
 #include "Module.h"
 #include "ModuleMgr.h"
 #include "ModuleConfig.h"
-#include "Log.h"
 
 Module::Module(const std::string& name)
 : config(nullptr)

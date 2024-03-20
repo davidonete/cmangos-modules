@@ -1,6 +1,6 @@
 #include "ModuleConfig.h"
 
-#include "Log.h"
+#include "Log/Log.h"
 #include "SystemConfig.h"
 
 ModuleConfig::ModuleConfig(const std::string& filename)

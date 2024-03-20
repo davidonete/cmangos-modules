@@ -40,9 +40,17 @@ Where `-G "Visual Studio 16 2019"` is the visual studio version you have, `-B bi
 4.  Lastly before finishing the installation guide remember to copy the configuration files of each module (located in `src/modules/<module>/src/<module>.conf.dist.in`) into the binary folder of the cmangos executables (where `mangosd.conf`is) and edit it to enable it and modify the configuration with your needs. After that finish the installation guide and you should be ready to go!
 
 ## Use a patch
-TBD
+You can patch the latest cmangos core to have the required modules code added on top of it. Be aware that this patches can fail if cmangos changes parts of code that the module system depends on. 
+To apply a patch download one of the following patch files depending on your core version:
+  - Classic: https://github.com/davidonete/cmangos-modules/blob/main/patches/classic.patch
+  - TBC: TBD
+  - WotLK: TBD
+Open the command line and navigate to the core repository and apply the patch with this command
+```
+git apply <patch file>
+```
 
-# How to write my own module
+# How to write your own module
 Creating your own module requires you to have some knowledge of programming, databases and cmake, but don't get discouraged from this as it is not as hard as it seems, once you get used to it becomes way easier. You should take one of the already made modules as a template to follow as it will help you understand it better. Here are the steps you have to do:
 
 1. Create a repository that will hold the required files for the module. The file structure should be like the following:

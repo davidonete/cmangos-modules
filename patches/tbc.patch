@@ -1,0 +1,2014 @@
+From 78cad0ff0b4738dfee613e967f790b8592ede759 Mon Sep 17 00:00:00 2001
+From: Flekz <davidparraausina@gmail.com>
+Date: Sat, 23 Mar 2024 12:53:01 +0000
+Subject: [PATCH] Integrate modules system
+
+---
+ CMakeLists.txt                                |  50 +++++
+ cmake/options.cmake                           |  11 +
+ cmake/showoptions.cmake                       |  19 ++
+ src/CMakeLists.txt                            |  35 +++
+ src/game/AuctionHouse/AuctionHouseHandler.cpp |   8 +
+ src/game/AuctionHouse/AuctionHouseMgr.cpp     |   8 +
+ src/game/BattleGround/BattleGround.cpp        |  16 ++
+ src/game/BattleGround/BattleGroundAB.cpp      |  12 +
+ src/game/BattleGround/BattleGroundAV.cpp      |  12 +
+ src/game/BattleGround/BattleGroundHandler.cpp |   9 +
+ src/game/BattleGround/BattleGroundWS.cpp      |  16 ++
+ src/game/CMakeLists.txt                       |  19 ++
+ src/game/Chat/Chat.cpp                        |   9 +
+ src/game/Chat/ChatHandler.cpp                 |   8 +
+ src/game/Entities/Creature.cpp                |  12 +
+ src/game/Entities/GameObject.cpp              |  28 +++
+ src/game/Entities/ItemHandler.cpp             |  16 ++
+ src/game/Entities/NPCHandler.cpp              |  17 ++
+ src/game/Entities/Player.cpp                  | 207 ++++++++++++++++++
+ src/game/Entities/Player.h                    |  12 +-
+ src/game/Entities/QueryHandler.cpp            |   9 +
+ src/game/Entities/Unit.cpp                    |  56 +++++
+ src/game/Groups/Group.cpp                     |  14 ++
+ src/game/Loot/LootHandler.cpp                 |  10 +
+ src/game/Loot/LootMgr.cpp                     |  42 ++++
+ src/game/Mails/MailHandler.cpp                |   8 +
+ src/game/Quests/QuestHandler.cpp              |  16 ++
+ src/game/Reputation/ReputationMgr.cpp         |   8 +
+ src/game/Server/DBCStores.cpp                 |   8 +
+ src/game/Server/DBCStores.h                   |   7 +-
+ src/game/Server/DBCStructure.h                |  21 ++
+ src/game/Server/DBCfmt.h                      |   4 +
+ src/game/Spells/Spell.cpp                     |  12 +
+ src/game/Spells/SpellHandler.cpp              |   9 +
+ src/game/Tools/PlayerDump.cpp                 |  17 ++
+ src/game/World/World.cpp                      |  16 ++
+ 36 files changed, 769 insertions(+), 12 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 9325cb0ae..7bc07d4b6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -87,6 +87,45 @@ if(MSVC)
+   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+ endif()
+ 
++# Modules setup
++if(BUILD_MODULES)
++  # Download module config file
++  include(FetchContent)
++
++  FetchContent_Declare(
++    modules
++    GIT_REPOSITORY "https://github.com/davidonete/cmangos-modules.git"
++    GIT_TAG "main"
++  )
++
++  if(NOT modules_POPULATED)
++	message(STATUS "Fetching module configuration...")
++    FetchContent_Populate(modules)
++
++    if(EXISTS ${CMAKE_SOURCE_DIR}/src/modules/modules)
++      file(REMOVE_RECURSE ${CMAKE_SOURCE_DIR}/src/modules/modules)
++    endif()
++
++    file(COPY ${modules_SOURCE_DIR}/. DESTINATION ${CMAKE_SOURCE_DIR}/src/modules/modules)
++    message(STATUS "Modules configuration fetched and populated in ${CMAKE_CURRENT_SOURCE_DIR}/src/modules/modules")
++
++    # Read module config file
++    file(READ ${CMAKE_SOURCE_DIR}/src/modules/modules/modules.conf MODULE_CONF)
++    string(REGEX REPLACE "\n" ";" MODULE_CONF_LINES "${MODULE_CONF}")
++    set(MODULE_NAMES)
++    set(MODULE_URLS)
++    foreach(MODULE_CONF_LINE ${MODULE_CONF_LINES})
++      string(REGEX MATCH "([^=]+)=(.*)" _ ${MODULE_CONF_LINE})
++      set(KEY ${CMAKE_MATCH_1})
++      set(VALUE ${CMAKE_MATCH_2})
++      if(NOT KEY STREQUAL "" OR NOT VALUE STREQUAL "")
++        list(APPEND MODULE_NAMES ${KEY})
++        list(APPEND MODULE_URLS ${VALUE})
++      endif()
++    endforeach()
++  endif()
++endif()
++
+ # set default buildoptions and print them
+ include(cmake/options.cmake)
+ 
+@@ -341,6 +380,17 @@ if(BUILD_PLAYERBOTS)
+   endif()
+ endif()
+ 
++if(BUILD_MODULES AND NOT BUILD_GAME_SERVER)
++  set(BUILD_MODULES OFF)
++  message(STATUS "BUILD_MODULES forced to OFF due to BUILD_GAME_SERVER is not set")
++endif()
++
++if(NOT BUILD_MODULES)
++  if(EXISTS ${CMAKE_SOURCE_DIR}/src/modules/modules)
++    file(REMOVE_RECURSE ${CMAKE_SOURCE_DIR}/src/modules/modules)
++  endif()
++endif()
++
+ if(PCH)
+   if(${CMAKE_VERSION} VERSION_LESS "3.16")
+     message("PCH is not supported by your CMake version")
+diff --git a/cmake/options.cmake b/cmake/options.cmake
+index e180ee0e7..8eb3259e8 100644
+--- a/cmake/options.cmake
++++ b/cmake/options.cmake
+@@ -8,6 +8,16 @@ option(BUILD_EXTRACTORS                     "Build map/dbc/vmap/mmap extractors"
+ option(BUILD_SCRIPTDEV                      "Build ScriptDev. (OFF Speedup build)"      ON)
+ option(BUILD_PLAYERBOTS                     "Build Playerbots mod"                      OFF)
+ option(BUILD_AHBOT                          "Build Auction House Bot mod"               OFF)
++
++# Modules
++option(BUILD_MODULES                        "Build module system"                       OFF)
++foreach(MODULE_NAME ${MODULE_NAMES})
++  if(NOT ${MODULE_NAME} STREQUAL "MODULES")
++    string(TOLOWER ${MODULE_NAME} LOWER_MODULE_NAME)
++	option(BUILD_MODULE_${MODULE_NAME} "Build ${LOWER_MODULE_NAME} module" OFF)
++  endif()
++endforeach()
++
+ option(BUILD_METRICS                        "Build Metrics, generate data for Grafana"  OFF)
+ option(BUILD_RECASTDEMOMOD                  "Build map/vmap/mmap viewer"                OFF)
+ option(BUILD_GIT_ID                         "Build git_id"                              OFF)
+@@ -36,6 +46,7 @@ message(STATUS
+     BUILD_EXTRACTORS        Build map/dbc/vmap/mmap extractor
+ 	BUILD_PLAYERBOTS        Build Playerbots mod
+     BUILD_AHBOT             Build Auction House Bot mod
++    BUILD_MODULES           Build module system
+     BUILD_METRICS           Build Metrics, generate data for Grafana
+     BUILD_RECASTDEMOMOD     Build map/vmap/mmap viewer
+     BUILD_GIT_ID            Build git_id
+diff --git a/cmake/showoptions.cmake b/cmake/showoptions.cmake
+index 7918cecee..eecca1987 100644
+--- a/cmake/showoptions.cmake
++++ b/cmake/showoptions.cmake
+@@ -73,6 +73,25 @@ else()
+   message(STATUS "Build Playerbots      : No  (default)")
+ endif()
+ 
++# Modules
++if(BUILD_MODULES)
++  message(STATUS "Build Modules         : Yes")
++  
++  foreach(MODULE_NAME ${MODULE_NAMES})
++    if(NOT ${MODULE_NAME} STREQUAL "MODULES")
++      string(TOLOWER ${MODULE_NAME} LOWER_MODULE_NAME)
++      if(BUILD_MODULE_${MODULE_NAME})
++        message(STATUS "Build ${LOWER_MODULE_NAME} Module : Yes")
++      else()
++        message(STATUS "Build ${LOWER_MODULE_NAME} Module : No (default)")
++      endif()
++	endif()
++  endforeach()
++  
++else()
++  message(STATUS "Build Modules         : No  (default)")
++endif()
++
+ if(BUILD_EXTRACTORS)
+   message(STATUS "Build extractors      : Yes")
+ else()
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index ddde74c2e..2ad26662f 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -57,4 +57,39 @@ endif()
+ 
+ if(BUILD_LOGIN_SERVER)
+   add_subdirectory(realmd)
++endif()
++
++# Install modules
++if(BUILD_MODULES)
++  list(LENGTH MODULE_NAMES MODULE_COUNT)
++  math(EXPR MODULE_COUNT "${MODULE_COUNT}-1")
++  foreach(INDEX RANGE ${MODULE_COUNT})
++    list(GET MODULE_NAMES ${INDEX} MODULE_NAME)
++    list(GET MODULE_URLS ${INDEX} MODULE_URL)
++  
++    string(TOLOWER ${MODULE_NAME} LOWER_MODULE_NAME)
++    if(BUILD_MODULE_${MODULE_NAME} OR BUILD_${MODULE_NAME})
++      include(FetchContent)
++
++      FetchContent_Declare(
++        ${LOWER_MODULE_NAME}
++		SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/modules/${LOWER_MODULE_NAME}"
++        GIT_REPOSITORY "${MODULE_URL}"
++        GIT_TAG "main"
++      )
++
++	  FetchContent_GetProperties(${LOWER_MODULE_NAME})
++      if(NOT ${LOWER_MODULE_NAME}_POPULATED)
++        message(STATUS "Fetching ${LOWER_MODULE_NAME} module...")
++        FetchContent_Populate(${LOWER_MODULE_NAME})
++        message(STATUS "${LOWER_MODULE_NAME} module fetched and populated in ${CMAKE_CURRENT_SOURCE_DIR}/modules/${LOWER_MODULE_NAME}")
++      endif()
++	
++      add_subdirectory(${CMAKE_SOURCE_DIR}/src/modules/${LOWER_MODULE_NAME})
++    else()
++      if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/modules/${LOWER_MODULE_NAME})
++        file(REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/modules/${LOWER_MODULE_NAME})
++      endif()
++    endif()
++  endforeach()
+ endif()
+\ No newline at end of file
+diff --git a/src/game/AuctionHouse/AuctionHouseHandler.cpp b/src/game/AuctionHouse/AuctionHouseHandler.cpp
+index 5ba7d3174..0d857f963 100644
+--- a/src/game/AuctionHouse/AuctionHouseHandler.cpp
++++ b/src/game/AuctionHouse/AuctionHouseHandler.cpp
+@@ -29,6 +29,10 @@
+ #include "Util/Util.h"
+ #include "Chat/Chat.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ // please DO NOT use iterator++, because it is slower than ++iterator!!!
+ // post-incrementation is always slower than pre-incrementation !
+ 
+@@ -322,6 +326,10 @@ void WorldSession::HandleAuctionSellItem(WorldPacket& recv_data)
+                itemGuid.GetString().c_str(), auctioneerGuid.GetString().c_str(), bid, buyout, etime, auctionHouseEntry->houseId);
+ 
+     SendAuctionCommandResult(AH, AUCTION_STARTED, AUCTION_OK);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnSellItem(AH, GetPlayer());
++#endif
+ }
+ 
+ // this function is called when client bids or buys out auction
+diff --git a/src/game/AuctionHouse/AuctionHouseMgr.cpp b/src/game/AuctionHouse/AuctionHouseMgr.cpp
+index 7cdc1f47e..e973888d4 100644
+--- a/src/game/AuctionHouse/AuctionHouseMgr.cpp
++++ b/src/game/AuctionHouse/AuctionHouseMgr.cpp
+@@ -36,6 +36,10 @@
+ 
+ #include "Policies/Singleton.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ INSTANTIATE_SINGLETON_1(AuctionHouseMgr);
+ 
+ AuctionHouseMgr::AuctionHouseMgr()
+@@ -1016,6 +1020,10 @@ bool AuctionEntry::UpdateBid(uint32 newbid, Player* newbidder /*=nullptr*/)
+     bidder = newbidder ? newbidder->GetGUIDLow() : 0;
+     bid = newbid;
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnUpdateBid(this, newbidder, newbid);
++#endif
++
+     if ((newbid < buyout) || (buyout == 0))                 // bid
+     {
+         if (auction_owner && newbidder) // don't send notification unless newbidder is set (AHBot bidding), otherwise player will be told auction was sold when it was just a bid
+diff --git a/src/game/BattleGround/BattleGround.cpp b/src/game/BattleGround/BattleGround.cpp
+index 90ba79010..0d930ab16 100644
+--- a/src/game/BattleGround/BattleGround.cpp
++++ b/src/game/BattleGround/BattleGround.cpp
+@@ -34,6 +34,10 @@
+ #include "Grids/GridNotifiersImpl.h"
+ #include "Chat/Chat.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ #include <cstdarg>
+ 
+ namespace MaNGOS
+@@ -949,6 +953,10 @@ void BattleGround::EndBattleGround(Team winner)
+     // AV message is different - TODO: check if others are also wrong
+     if (winmsg_id && GetTypeId() != BATTLEGROUND_AV)
+         SendMessageToAll(winmsg_id, CHAT_MSG_BG_SYSTEM_NEUTRAL);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnEndBattleGround(this, winner);
++#endif
+ }
+ 
+ /**
+@@ -1292,6 +1300,10 @@ void BattleGround::RemovePlayerAtLeave(ObjectGuid playerGuid, bool isOnTransport
+             player->TeleportToBGEntryPoint();
+ 
+         DETAIL_LOG("BATTLEGROUND: Removed player %s from BattleGround.", player->GetName());
++
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnLeaveBattleGround(this, player);
++#endif
+     }
+ 
+     // battleground object will be deleted next BattleGround::Update() call
+@@ -1418,6 +1430,10 @@ void BattleGround::AddPlayer(Player* player)
+ 
+     // Log
+     DETAIL_LOG("BATTLEGROUND: Player %s joined the battle.", player->GetName());
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnJoinBattleGround(this, player);
++#endif
+ }
+ 
+ /* this method adds player to his team's bg group, or sets his correct group if player is already in bg group */
+diff --git a/src/game/BattleGround/BattleGroundAB.cpp b/src/game/BattleGround/BattleGroundAB.cpp
+index 8088ed603..d245efc83 100644
+--- a/src/game/BattleGround/BattleGroundAB.cpp
++++ b/src/game/BattleGround/BattleGroundAB.cpp
+@@ -26,6 +26,10 @@
+ #include "Server/WorldPacket.h"
+ #include "Globals/ObjectMgr.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ BattleGroundAB::BattleGroundAB(): m_isInformedNearVictory(false), m_honorTicks(0), m_reputationTics(0)
+ {
+     m_startMessageIds[BG_STARTING_EVENT_FIRST]  = 0;
+@@ -163,6 +167,10 @@ void BattleGroundAB::StartingEventOpenDoors()
+     // disable gy inside base after bg start
+     GetBgMap()->GetGraveyardManager().SetGraveYardLinkTeam(AB_GRAVEYARD_ALLIANCE_BASE, BG_AB_ZONE_MAIN, TEAM_INVALID);
+     GetBgMap()->GetGraveyardManager().SetGraveYardLinkTeam(AB_GRAVEYARD_HORDE_BASE, BG_AB_ZONE_MAIN, TEAM_INVALID);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnStartBattleGround(this);
++#endif
+ }
+ 
+ void BattleGroundAB::AddPlayer(Player* player)
+@@ -464,6 +472,10 @@ void BattleGroundAB::UpdatePlayerScore(Player* source, uint32 type, uint32 value
+             BattleGround::UpdatePlayerScore(source, type, value);
+             break;
+     }
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnUpdatePlayerScore(this, source, type, value);
++#endif
+ }
+ 
+ Team BattleGroundAB::GetPrematureWinner()
+diff --git a/src/game/BattleGround/BattleGroundAV.cpp b/src/game/BattleGround/BattleGroundAV.cpp
+index da558aaf0..62dbdc940 100644
+--- a/src/game/BattleGround/BattleGroundAV.cpp
++++ b/src/game/BattleGround/BattleGroundAV.cpp
+@@ -27,6 +27,10 @@
+ #include "Globals/ObjectMgr.h"
+ #include "AI/ScriptDevAI/include/sc_grid_searchers.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ BattleGroundAV::BattleGroundAV(): m_mineYellTimer(BG_AV_MINE_YELL), m_honorMapComplete(0), m_repTowerDestruction(0), m_repCaptain(0), m_repBoss(0), m_repOwnedGrave(0), m_repOwnedMine(0), m_repSurviveCaptain(0), m_repSurviveTower(0)
+ {
+     m_startMessageIds[BG_STARTING_EVENT_FIRST]  = 0;
+@@ -354,6 +358,10 @@ void BattleGroundAV::StartingEventOpenDoors()
+     GetBgMap()->GetVariableManager().SetVariable(BG_AV_STATE_SCORE_SHOW_A, WORLD_STATE_ADD);
+ 
+     OpenDoorEvent(BG_EVENT_DOOR);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnStartBattleGround(this);
++#endif
+ }
+ 
+ void BattleGroundAV::AddPlayer(Player* player)
+@@ -485,6 +493,10 @@ void BattleGroundAV::UpdatePlayerScore(Player* source, uint32 type, uint32 value
+             BattleGround::UpdatePlayerScore(source, type, value);
+             break;
+     }
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnUpdatePlayerScore(this, source, type, value);
++#endif
+ }
+ 
+ // Process the destruction of a battleground node
+diff --git a/src/game/BattleGround/BattleGroundHandler.cpp b/src/game/BattleGround/BattleGroundHandler.cpp
+index 11c14149e..24b97ce3e 100644
+--- a/src/game/BattleGround/BattleGroundHandler.cpp
++++ b/src/game/BattleGround/BattleGroundHandler.cpp
+@@ -34,6 +34,10 @@
+ #include "AI/ScriptDevAI/ScriptDevAIMgr.h"
+ #include "World/World.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ // Sent by client when player talk to the battle master
+ void WorldSession::HandleBattlemasterHelloOpcode(WorldPacket& recv_data)
+ {
+@@ -634,6 +638,11 @@ void WorldSession::HandleAreaSpiritHealerQueueOpcode(WorldPacket& recv_data)
+     if (!unit->isSpiritService())                           // it's not spirit service
+         return;
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnPreGossipHello(_player, unit->GetObjectGuid()))
++        return;
++#endif
++
+     sScriptDevAIMgr.OnGossipHello(GetPlayer(), unit);
+ }
+ 
+diff --git a/src/game/BattleGround/BattleGroundWS.cpp b/src/game/BattleGround/BattleGroundWS.cpp
+index d0be3deff..0f72ba3a2 100644
+--- a/src/game/BattleGround/BattleGroundWS.cpp
++++ b/src/game/BattleGround/BattleGroundWS.cpp
+@@ -25,6 +25,10 @@
+ #include "BattleGroundMgr.h"
+ #include "Server/WorldPacket.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ BattleGroundWS::BattleGroundWS() : m_reputationCapture(0), m_honorWinKills(0), m_honorEndKills(0)
+ {
+     // set battleground start message ids
+@@ -123,6 +127,10 @@ void BattleGroundWS::StartingEventOpenDoors()
+     GetBgMap()->GetGraveyardManager().SetGraveYardLinkTeam(WS_GRAVEYARD_MAIN_HORDE,        BG_WS_ZONE_ID_MAIN, HORDE);
+     GetBgMap()->GetGraveyardManager().SetGraveYardLinkTeam(WS_GRAVEYARD_FLAGROOM_ALLIANCE, BG_WS_ZONE_ID_MAIN, TEAM_INVALID);
+     GetBgMap()->GetGraveyardManager().SetGraveYardLinkTeam(WS_GRAVEYARD_FLAGROOM_HORDE,    BG_WS_ZONE_ID_MAIN, TEAM_INVALID);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnStartBattleGround(this);
++#endif
+ }
+ 
+ void BattleGroundWS::AddPlayer(Player* player)
+@@ -339,6 +347,10 @@ void BattleGroundWS::ProcessFlagPickUpFromBase(Player* player, Team attackerTeam
+     PlaySoundToAll(wsgFlagData[otherTeamIdx][BG_WS_FLAG_ACTION_PICKEDUP].soundId);
+     SendMessageToAll(wsgFlagData[otherTeamIdx][BG_WS_FLAG_ACTION_PICKEDUP].messageId, wsgFlagData[teamIdx][BG_WS_FLAG_ACTION_PICKEDUP].chatType, player);
+     player->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_PVP_ACTIVE_CANCELS);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnPickUpFlag(this, player, attackerTeam);
++#endif
+ }
+ 
+ // Function that handles the click action on the dropped flag
+@@ -639,6 +651,10 @@ void BattleGroundWS::UpdatePlayerScore(Player* player, uint32 type, uint32 value
+             BattleGround::UpdatePlayerScore(player, type, value);
+             break;
+     }
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnUpdatePlayerScore(this, player, type, value);
++#endif
+ }
+ 
+ Team BattleGroundWS::GetPrematureWinner()
+diff --git a/src/game/CMakeLists.txt b/src/game/CMakeLists.txt
+index 45a1d33b1..76e4aa004 100644
+--- a/src/game/CMakeLists.txt
++++ b/src/game/CMakeLists.txt
+@@ -128,6 +128,25 @@ if(BUILD_PLAYERBOTS)
+   add_dependencies(${LIBRARY_NAME} playerbots)
+ endif()
+ 
++# Add modules to project
++if(BUILD_MODULES)
++  file(GLOB SUBDIRECTORIES LIST_DIRECTORIES true ${CMAKE_SOURCE_DIR}/src/modules/*)
++  foreach(SUBDIR ${SUBDIRECTORIES})
++    get_filename_component(FOLDER_NAME ${SUBDIR} NAME)
++	string(TOUPPER ${FOLDER_NAME} UPPER_FOLDER_NAME)
++    if(BUILD_MODULE_${UPPER_FOLDER_NAME})
++      include_directories(${CMAKE_SOURCE_DIR}/src/modules/${FOLDER_NAME}/src)
++      target_link_libraries(${LIBRARY_NAME} PUBLIC ${FOLDER_NAME})
++      add_dependencies(${LIBRARY_NAME} ${FOLDER_NAME})
++    endif()
++  endforeach()
++  
++  include_directories(${CMAKE_SOURCE_DIR}/src/modules/modules/src)
++  target_link_libraries(${LIBRARY_NAME} PUBLIC modules)
++  add_dependencies(${LIBRARY_NAME} modules)
++  add_definitions(-DENABLE_MODULES)
++endif()
++
+ if(UNIX)
+   # Both systems don't have libdl and don't need them
+   if (NOT (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD"))
+diff --git a/src/game/Chat/Chat.cpp b/src/game/Chat/Chat.cpp
+index fdee2742c..d581d68e5 100644
+--- a/src/game/Chat/Chat.cpp
++++ b/src/game/Chat/Chat.cpp
+@@ -40,6 +40,10 @@
+ #include "playerbot/PlayerbotAIConfig.h"
+ #endif
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ #include <cstdarg>
+ 
+ // Supported shift-links (client generated and server side)
+@@ -1494,6 +1498,11 @@ void ChatHandler::ExecuteCommand(const char* text)
+         }
+         case CHAT_COMMAND_UNKNOWN:
+         {
++#ifdef ENABLE_MODULES
++            if (sModuleMgr.OnExecuteCommand(this, fullcmd))
++                return;
++#endif
++
+             SendSysMessage(LANG_NO_CMD);
+             SetSentErrorMessage(true);
+             break;
+diff --git a/src/game/Chat/ChatHandler.cpp b/src/game/Chat/ChatHandler.cpp
+index a512303b2..fea7ccec0 100644
+--- a/src/game/Chat/ChatHandler.cpp
++++ b/src/game/Chat/ChatHandler.cpp
+@@ -42,6 +42,10 @@
+ #include "playerbot/RandomPlayerbotMgr.h"
+ #endif
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ bool WorldSession::CheckChatMessage(std::string& msg, bool addon/* = false*/)
+ {
+ #ifdef BUILD_DEPRECATED_PLAYERBOT
+@@ -818,6 +822,10 @@ void WorldSession::HandleTextEmoteOpcode(WorldPacket& recv_data)
+     // Send scripted event call
+     if (unit && unit->AI())
+         unit->AI()->ReceiveEmote(GetPlayer(), textEmote);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnEmote(GetPlayer(), unit, textEmote);
++#endif
+ }
+ 
+ void WorldSession::HandleChatIgnoredOpcode(WorldPacket& recv_data)
+diff --git a/src/game/Entities/Creature.cpp b/src/game/Entities/Creature.cpp
+index 87d511335..80978b078 100644
+--- a/src/game/Entities/Creature.cpp
++++ b/src/game/Entities/Creature.cpp
+@@ -51,6 +51,9 @@
+ // apply implementation of the singletons
+ #include "Policies/Singleton.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
+ 
+ TrainerSpell const* TrainerSpellData::Find(uint32 spell_id) const
+ {
+@@ -735,6 +738,11 @@ void Creature::Update(const uint32 diff)
+         {
+             if (m_respawnTime <= time(nullptr) && (!m_isSpawningLinked || GetMap()->GetCreatureLinkingHolder()->CanSpawn(this)))
+             {
++#ifdef ENABLE_MODULES
++                if (sModuleMgr.OnRespawn(this, m_respawnTime))
++                    return;
++#endif
++
+                 DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "Respawning...");
+                 m_respawnTime = 0;
+                 SetCanAggro(false);
+@@ -1913,6 +1921,10 @@ void Creature::Respawn()
+         if (HasStaticDBSpawnData())
+             GetMap()->GetPersistentState()->SaveCreatureRespawnTime(GetDbGuid(), 0);
+         m_respawnTime = time(nullptr);                         // respawn at next tick
++
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnRespawnRequest(this);
++#endif
+     }
+ }
+ 
+diff --git a/src/game/Entities/GameObject.cpp b/src/game/Entities/GameObject.cpp
+index 126f8209e..481799ee8 100644
+--- a/src/game/Entities/GameObject.cpp
++++ b/src/game/Entities/GameObject.cpp
+@@ -45,6 +45,10 @@
+ #include <G3D/Quat.h>
+ #include "Entities/Transports.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ bool QuaternionData::isUnit() const
+ {
+     return fabs(x * x + y * y + z * z + w * w - 1.0f) < 1e-5f;
+@@ -1435,6 +1439,11 @@ void GameObject::Use(Unit* user, SpellEntry const* spellInfo)
+ 
+     sWorldState.HandleGameObjectUse(this, user);
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnUse(this, user))
++        return;
++#endif
++
+     switch (GetGoType())
+     {
+         case GAMEOBJECT_TYPE_DOOR:                          // 0
+@@ -1478,9 +1487,16 @@ void GameObject::Use(Unit* user, SpellEntry const* spellInfo)
+ 
+             Player* player = (Player*)user;
+ 
++#ifdef ENABLE_MODULES
++            if (sModuleMgr.OnPreGossipHello(player, GetObjectGuid()))
++                return;
++#endif
+             if (!sScriptDevAIMgr.OnGossipHello(player, this))
+             {
+                 player->PrepareGossipMenu(this, GetGOInfo()->questgiver.gossipID);
++#ifdef ENABLE_MODULES
++                sModuleMgr.OnGossipHello(player, GetObjectGuid());
++#endif
+                 player->SendPreparedGossip(this);
+             }
+ 
+@@ -1617,11 +1633,23 @@ void GameObject::Use(Unit* user, SpellEntry const* spellInfo)
+                 }
+                 else if (info->goober.gossipID)             // ...or gossip, if page does not exist
+                 {
++#ifdef ENABLE_MODULES
++                    if (!sModuleMgr.OnPreGossipHello(player, GetObjectGuid()))
++                    {
++                        if (!sScriptDevAIMgr.OnGossipHello(player, this))
++                        {
++                            player->PrepareGossipMenu(this, info->goober.gossipID);
++                            sModuleMgr.OnGossipHello(player, GetObjectGuid());
++                            player->SendPreparedGossip(this);
++                        }
++                    }
++#else
+                     if (!sScriptDevAIMgr.OnGossipHello(player, this))
+                     {
+                         player->PrepareGossipMenu(this, info->goober.gossipID);
+                         player->SendPreparedGossip(this);
+                     }
++#endif
+                 }
+ 
+                 if (info->goober.eventId)
+diff --git a/src/game/Entities/ItemHandler.cpp b/src/game/Entities/ItemHandler.cpp
+index efa714c2e..3a4589158 100644
+--- a/src/game/Entities/ItemHandler.cpp
++++ b/src/game/Entities/ItemHandler.cpp
+@@ -27,6 +27,10 @@
+ #include "Entities/UpdateData.h"
+ #include "Chat/Chat.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ void WorldSession::HandleSplitItemOpcode(WorldPacket& recv_data)
+ {
+     // DEBUG_LOG("WORLD: CMSG_SPLIT_ITEM");
+@@ -599,6 +603,10 @@ void WorldSession::HandleSellItemOpcode(WorldPacket& recv_data)
+     }
+ 
+     _player->ModifyMoney(money);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnSellItem(_player, pItem, money);
++#endif
+ }
+ 
+ void WorldSession::HandleBuybackItem(WorldPacket& recv_data)
+@@ -635,6 +643,10 @@ void WorldSession::HandleBuybackItem(WorldPacket& recv_data)
+             _player->RemoveItemFromBuyBackSlot(slot, false);
+             _player->ItemAddedQuestCheck(pItem->GetEntry(), pItem->GetCount());
+             _player->StoreItem(dest, pItem, true);
++
++#ifdef ENABLE_MODULES
++            sModuleMgr.OnBuyBackItem(_player, pItem, price);
++#endif
+         }
+         else
+             _player->SendEquipError(msg, pItem, nullptr);
+@@ -924,6 +936,10 @@ void WorldSession::HandleBuyBankSlotOpcode(WorldPacket& recvPacket)
+ 
+     data << uint32(ERR_BANKSLOT_OK);
+     SendPacket(data);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnBuyBankSlot(_player, slot, price);
++#endif
+ }
+ 
+ void WorldSession::HandleAutoBankItemOpcode(WorldPacket& recvPacket)
+diff --git a/src/game/Entities/NPCHandler.cpp b/src/game/Entities/NPCHandler.cpp
+index 21f479063..d398cde84 100644
+--- a/src/game/Entities/NPCHandler.cpp
++++ b/src/game/Entities/NPCHandler.cpp
+@@ -34,6 +34,10 @@
+ #include "Guilds/GuildMgr.h"
+ #include "Chat/Chat.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ enum StableResultCode
+ {
+     STABLE_ERR_MONEY        = 0x01,                         // "you don't have enough money"
+@@ -326,9 +330,17 @@ void WorldSession::HandleGossipHelloOpcode(WorldPacket& recv_data)
+     if (pCreature->isSpiritGuide())
+         pCreature->SendAreaSpiritHealerQueryOpcode(_player);
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnPreGossipHello(_player, pCreature->GetObjectGuid()))
++        return;
++#endif
++
+     if (!sScriptDevAIMgr.OnGossipHello(_player, pCreature))
+     {
+         _player->PrepareGossipMenu(pCreature, pCreature->GetDefaultGossipMenuId());
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnGossipHello(_player, pCreature->GetObjectGuid());
++#endif
+         _player->SendPreparedGossip(pCreature);
+     }
+ }
+@@ -353,6 +365,11 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket& recv_data)
+     uint32 sender = _player->GetPlayerMenu()->GossipOptionSender(gossipListId);
+     uint32 action = _player->GetPlayerMenu()->GossipOptionAction(gossipListId);
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnGossipSelect(_player, guid, sender, action, code, gossipListId))
++        return;
++#endif
++
+     if (guid.IsAnyTypeCreature())
+     {
+         Creature* pCreature = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
+diff --git a/src/game/Entities/Player.cpp b/src/game/Entities/Player.cpp
+index 7e409907f..5a2277474 100644
+--- a/src/game/Entities/Player.cpp
++++ b/src/game/Entities/Player.cpp
+@@ -76,6 +76,10 @@
+ #include "playerbot/PlayerbotAIConfig.h"
+ #endif
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ #include <cmath>
+ 
+ #define ZONE_UPDATE_INTERVAL (1*IN_MILLISECONDS)
+@@ -713,6 +717,10 @@ Player::~Player()
+ #endif
+ 
+     delete m_declinedname;
++	
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnLogOut(this);
++#endif
+ }
+ 
+ void Player::CleanupsBeforeDelete()
+@@ -773,6 +781,10 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
+ 
+     m_name = name;
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnPreCharacterCreated(this);
++#endif
++
+     PlayerInfo const* info = sObjectMgr.GetPlayerInfo(race, class_);
+     if (!info)
+     {
+@@ -973,6 +985,10 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
+     }
+     // all item positions resolved
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnCharacterCreated(this);
++#endif
++
+     return true;
+ }
+ 
+@@ -1070,6 +1086,11 @@ uint32 Player::EnvironmentalDamage(EnviromentalDamage type, uint32 damage)
+         GetSession()->SendPacket(data2);
+     }
+ 
++#ifdef ENABLE_MODULES
++    if (!IsAlive())
++        sModuleMgr.OnDeath(this, type);
++#endif
++
+     return final_damage;
+ }
+ 
+@@ -2467,6 +2488,22 @@ void Player::RegenerateHealth(uint32 diff)
+     ModifyHealth(int32(addvalue * float(diff) / 1000));
+ }
+ 
++void Player::ModifyMoney(int32 d)
++{
++	if (d < 0)
++		SetMoney(GetMoney() > uint32(-d) ? GetMoney() + d : 0);
++	else
++		SetMoney(GetMoney() < uint32(MAX_MONEY_AMOUNT - d) ? GetMoney() + d : MAX_MONEY_AMOUNT);
++
++	// "At Gold Limit"
++	if (GetMoney() >= MAX_MONEY_AMOUNT)
++		SendEquipError(EQUIP_ERR_TOO_MUCH_GOLD, nullptr, nullptr);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnModifyMoney(this, d);
++#endif
++}
++
+ Creature* Player::GetNPCIfCanInteractWith(ObjectGuid guid, uint32 npcflagmask)
+ {
+     // some basic checks
+@@ -2767,6 +2804,10 @@ void Player::GiveXP(uint32 xp, Creature* victim, float groupRate)
+     }
+ 
+     SetUInt32Value(PLAYER_XP, newXP);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnGiveXP(this, xp, victim);
++#endif
+ }
+ 
+ // Update player to next level
+@@ -2781,6 +2822,10 @@ void Player::GiveLevel(uint32 level)
+     PlayerLevelInfo info;
+     sObjectMgr.GetPlayerLevelInfo(getRace(), plClass, level, &info);
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnGetPlayerLevelInfo(this, info);
++#endif
++
+     PlayerClassLevelInfo classInfo;
+     sObjectMgr.GetPlayerClassLevelInfo(plClass, level, &classInfo);
+ 
+@@ -2849,6 +2894,10 @@ void Player::GiveLevel(uint32 level)
+     // resend quests status directly
+     GetSession()->SetCurrentPlayerLevel(level);
+     SendQuestGiverStatusMultiple();
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnGiveLevel(this, level);
++#endif
+ }
+ 
+ void Player::UpdateFreeTalentPoints(bool resetIfNeed)
+@@ -2901,6 +2950,10 @@ void Player::InitStatsForLevel(bool reapplyMods)
+ 
+     PlayerLevelInfo info;
+     sObjectMgr.GetPlayerLevelInfo(getRace(), plClass, level, &info);
++	
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnGetPlayerLevelInfo(this, info);
++#endif
+ 
+     SetUInt32Value(PLAYER_FIELD_MAX_LEVEL, sObjectMgr.GetMaxLevelForExpansion(GetSession()->GetExpansion()));
+     SetUInt32Value(PLAYER_NEXT_LEVEL_XP, GetMaxAttainableLevel() <= level ? 0 : sObjectMgr.GetXPForLevel(level));
+@@ -3570,6 +3623,10 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool dependen
+         }
+     }
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnAddSpell(this, spell_id);
++#endif
++
+     // return true (for send learn packet) only if spell active (in case ranked spells) and not replace old spell
+     return active && !disabled && !superceded_old;
+ }
+@@ -3971,6 +4028,10 @@ bool Player::resetTalents(bool no_cost)
+         m_resetTalentsTime = time(nullptr);
+     }
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnResetTalents(this, cost);
++#endif
++
+     // FIXME: remove pet before or after unlearn spells? for now after unlearn to allow removing of talent related, pet affecting auras
+     RemovePet(PET_SAVE_REAGENTS);
+     return true;
+@@ -4391,6 +4452,11 @@ void Player::DeleteFromDB(ObjectGuid playerguid, uint32 accountId, bool updateRe
+             CharacterDatabase.PExecute("DELETE FROM guild_eventlog WHERE PlayerGuid1 = '%u' OR PlayerGuid2 = '%u'", lowguid, lowguid);
+             CharacterDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE PlayerGuid = '%u'", lowguid);
+             CharacterDatabase.CommitTransaction();
++			
++#ifdef ENABLE_MODULES
++            sModuleMgr.OnDeleteFromDB(lowguid);
++#endif
++			
+             break;
+         }
+         // The character gets unlinked from the account, the name gets freed up and appears as deleted ingame
+@@ -4495,6 +4561,11 @@ void Player::BuildPlayerRepop()
+ 
+ void Player::ResurrectPlayer(float restore_percent, bool applySickness)
+ {
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnPreResurrect(this))
++        return;
++#endif
++	
+     WorldPacket data(SMSG_DEATH_RELEASE_LOC, 4 * 4);        // remove spirit healer position
+     data << uint32(-1);
+     data << float(0);
+@@ -4543,6 +4614,10 @@ void Player::ResurrectPlayer(float restore_percent, bool applySickness)
+         if (InstanceData* instanceData = GetMap()->GetInstanceData())
+             instanceData->OnPlayerResurrect(this);
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnResurrect(this);
++#endif
++
+     if (!applySickness)
+         return;
+ 
+@@ -4966,6 +5041,10 @@ void Player::RepopAtGraveyard()
+         if (updateVisibility && IsInWorld())
+             UpdateVisibilityAndView();
+     }
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnReleaseSpirit(this, ClosestGrave);
++#endif
+ }
+ 
+ void Player::JoinedChannel(Channel* c)
+@@ -5380,6 +5459,10 @@ bool Player::UpdateSkill(uint16 id, uint16 diff)
+         if (skillStatus.uState != SKILL_NEW)
+             skillStatus.uState = SKILL_CHANGED;
+ 
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnUpdateSkill(this, id);
++#endif
++
+         return true;
+     }
+ 
+@@ -5539,6 +5622,10 @@ bool Player::UpdateSkillPro(uint16 SkillId, int32 Chance, uint16 diff)
+         if (skillStatus.uState != SKILL_NEW)
+             skillStatus.uState = SKILL_CHANGED;
+ 
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnUpdateSkill(this, SkillId);
++#endif
++
+         DEBUG_LOG("Player::UpdateSkillPro Chance=%3.1f%% taken", Chance / 10.0);
+         return true;
+     }
+@@ -5671,6 +5758,10 @@ void Player::SetSkill(SkillStatusMap::iterator itr, uint16 value, uint16 max, ui
+ 
+         if (status.uState != SKILL_NEW)
+             status.uState = SKILL_CHANGED;
++
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnUpdateSkill(this, id);
++#endif
+     }
+     else        // Remove
+     {
+@@ -6516,6 +6607,10 @@ void Player::CheckAreaExploreAndOutdoor()
+                 SendExplorationExperience(area, XP);
+             }
+             DETAIL_LOG("PLAYER: Player %u discovered a new area: %u", GetGUIDLow(), area);
++
++#ifdef ENABLE_MODULES
++            sModuleMgr.OnAreaExplored(this, area);
++#endif
+         }
+     }
+ }
+@@ -6758,6 +6853,10 @@ void Player::UpdateHonorFields()
+     }
+ 
+     m_lastHonorUpdateTime = now;
++	
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnUpdateHonor(this);
++#endif
+ }
+ 
+ /// Calculate the amount of honor gained based on the victim
+@@ -6882,6 +6981,11 @@ bool Player::RewardHonor(Unit* uVictim, uint32 groupsize, float honor)
+     ModifyHonorPoints(int32(honor));
+ 
+     ApplyModUInt32Value(PLAYER_FIELD_TODAY_CONTRIBUTION, uint32(honor), true);
++	
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnRewardHonor(this, uVictim);
++#endif
++	
+     return true;
+ }
+ 
+@@ -7239,6 +7343,10 @@ void Player::DuelComplete(DuelCompleteType type)
+     duel->opponent->SetGuidValue(PLAYER_DUEL_ARBITER, ObjectGuid());
+     duel->opponent->SetUInt32Value(PLAYER_DUEL_TEAM, 0);
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnDuelComplete(this, duel->opponent, type);
++#endif
++
+     delete duel->opponent->duel;
+     duel->opponent->duel = nullptr;
+     delete duel;
+@@ -10396,6 +10504,10 @@ Item* Player::StoreItem(ItemPosCountVec const& dest, Item* pItem, bool update)
+         lastItem = _StoreItem(pos, pItem, count, true, update);
+     }
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnStoreItem(this, lastItem);
++#endif
++
+     return lastItem;
+ }
+ 
+@@ -10573,6 +10685,10 @@ Item* Player::EquipItem(uint16 pos, Item* pItem, bool update)
+             UpdateWeaponDependantStats(OFF_ATTACK);
+         else if (slot == EQUIPMENT_SLOT_RANGED)
+             UpdateWeaponDependantStats(RANGED_ATTACK);
++
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnEquipItem(this, pItem);
++#endif
+     }
+     else
+     {
+@@ -10597,6 +10713,10 @@ Item* Player::EquipItem(uint16 pos, Item* pItem, bool update)
+ 
+         ApplyEquipCooldown(pItem2);
+ 
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnEquipItem(this, pItem2);
++#endif
++
+         return pItem2;
+     }
+ 
+@@ -10619,6 +10739,10 @@ void Player::QuickEquipItem(uint16 pos, Item* pItem)
+             pItem->AddToWorld();
+             pItem->SendCreateUpdateToPlayer(this);
+         }
++
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnEquipItem(this, pItem);
++#endif
+     }
+ }
+ 
+@@ -10651,6 +10775,10 @@ void Player::SetVisibleItemSlot(uint8 slot, Item* pItem)
+         SetUInt32Value(PLAYER_VISIBLE_ITEM_1_PROPERTIES + 0 + (slot * MAX_VISIBLE_ITEM_OFFSET), 0);
+         SetUInt32Value(PLAYER_VISIBLE_ITEM_1_PROPERTIES + 1 + (slot * MAX_VISIBLE_ITEM_OFFSET), 0);
+     }
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnSetVisibleItemSlot(this, slot, pItem);
++#endif
+ }
+ 
+ void Player::VisualizeItem(uint8 slot, Item* pItem)
+@@ -10775,6 +10903,10 @@ void Player::MoveItemFromInventory(uint8 bag, uint8 slot, bool update)
+             it->RemoveFromWorld();
+             it->DestroyForPlayer(this);
+         }
++
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnMoveItemFromInventory(this, it);
++#endif
+     }
+ }
+ 
+@@ -10798,6 +10930,10 @@ void Player::MoveItemToInventory(ItemPosCountVec const& dest, Item* pItem, bool
+         // in case trade we already have item in other player inventory
+         pLastItem->SetState(in_characterInventoryDB ? ITEM_CHANGED : ITEM_NEW, this);
+     }
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnMoveItemToInventory(this, pItem);
++#endif
+ }
+ 
+ void Player::DestroyItem(uint8 bag, uint8 slot, bool update)
+@@ -13526,6 +13662,10 @@ void Player::RewardQuest(Quest const* pQuest, uint32 reward, Object* questGiver,
+ 
+     // resend quests status directly
+     SendQuestGiverStatusMultiple();
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnRewardQuest(this, pQuest);
++#endif
+ }
+ 
+ bool Player::IsQuestExplored(uint32 quest_id) const
+@@ -14391,6 +14531,10 @@ void Player::KilledMonsterCredit(uint32 entry, ObjectGuid guid)
+             }
+         }
+     }
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnKilledMonsterCredit(this, entry, guid);
++#endif
+ }
+ 
+ void Player::CastedCreatureOrGO(uint32 entry, ObjectGuid guid, uint32 spell_id, bool original_caster)
+@@ -15050,6 +15194,10 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
+         return false;
+     }
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnPreLoadFromDB(this);
++#endif
++
+     // overwrite possible wrong/corrupted guid
+     SetGuidValue(OBJECT_FIELD_GUID, guid);
+ 
+@@ -15632,12 +15780,21 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
+     _LoadDeclinedNames(holder->GetResult(PLAYER_LOGIN_QUERY_LOADDECLINEDNAMES));
+ 
+     _LoadCreatedInstanceTimers();
++	
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnLoadFromDB(this);
++#endif
+ 
+     return true;
+ }
+ 
+ void Player::_LoadActions(std::unique_ptr<QueryResult> queryResult)
+ {
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnLoadActionButtons(this, m_actionButtons))
++        return;
++#endif
++	
+     m_actionButtons.clear();
+ 
+     // QueryResult *result = CharacterDatabase.PQuery("SELECT button,action,type FROM character_action WHERE guid = '%u' ORDER BY button",GetGUIDLow());
+@@ -16885,6 +17042,10 @@ void Player::SaveToDB()
+     // save pet (hunter pet level and experience and all type pets health/mana except priest pet).
+     if (Pet* pet = GetPet())
+         pet->SavePetToDB(PET_SAVE_AS_CURRENT, this);
++	
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnSaveToDB(this);
++#endif
+ }
+ 
+ // fast save function for item/money cheating preventing - save only inventory and money state
+@@ -16904,6 +17065,11 @@ void Player::SaveGoldToDB() const
+ 
+ void Player::_SaveActions()
+ {
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnSaveActionButtons(this, m_actionButtons))
++        return;
++#endif
++
+     static SqlStatementID insertAction ;
+     static SqlStatementID updateAction ;
+     static SqlStatementID deleteAction ;
+@@ -18620,6 +18786,10 @@ void Player::OnTaxiFlightRouteStart(uint32 pathID, bool initial)
+         if (const TaxiPathEntry* path = sTaxiPathStore.LookupEntry(pathID))
+             OnTaxiFlightStart(path);
+     }
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnTaxiFlightRouteStart(this, m_taxiTracker, initial);
++#endif
+ }
+ 
+ void Player::OnTaxiFlightRouteEnd(uint32 pathID, bool final)
+@@ -18631,6 +18801,10 @@ void Player::OnTaxiFlightRouteEnd(uint32 pathID, bool final)
+     }
+     else
+         ModifyMoney(-int32(m_taxiTracker.GetCost()));
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnTaxiFlightRouteEnd(this, m_taxiTracker, final);
++#endif
+ }
+ 
+ void Player::OnTaxiFlightRouteProgress(const TaxiPathNodeEntry* node, const TaxiPathNodeEntry* next /*= nullptr*/)
+@@ -20234,6 +20408,10 @@ void Player::SummonIfPossible(bool agree, ObjectGuid guid)
+     if (BattleGround* bg = GetBattleGround())
+         bg->HandlePlayerDroppedFlag(this);
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnSummoned(this, m_summoner);
++#endif
++
+     m_summon_expire = 0;
+     m_summoner.Clear();
+ 
+@@ -20456,6 +20634,11 @@ bool Player::isHonorOrXPTarget(Unit* pVictim) const
+ 
+ void Player::RewardSinglePlayerAtKill(Unit* pVictim)
+ {
++#ifdef ENABLE_MODULES
++    if (!sModuleMgr.OnPreRewardPlayerAtKill(this, pVictim))
++    {
++#endif
++
+     // honor can be in PvP and !PvP (racial leader) cases
+     RewardHonor(pVictim, 1);
+ 
+@@ -20473,6 +20656,11 @@ void Player::RewardSinglePlayerAtKill(Unit* pVictim)
+         if (CreatureInfo const* normalInfo = creatureVictim->GetCreatureInfo())
+             KilledMonster(normalInfo, creatureVictim);
+     }
++
++#ifdef ENABLE_MODULES
++    }
++    sModuleMgr.OnRewardPlayerAtKill(this, pVictim);
++#endif
+ }
+ 
+ void Player::RewardPlayerAndGroupAtEventCredit(uint32 creature_id, WorldObject* pRewardSource)
+@@ -21394,6 +21582,12 @@ InventoryResult Player::CanEquipUniqueItem(ItemPrototype const* itemProto, uint8
+ 
+ void Player::HandleFall(MovementInfo const& movementInfo)
+ {
++#ifdef ENABLE_MODULES
++    uint32 damageReceived = 0;
++    if (!sModuleMgr.OnPreHandleFall(this, movementInfo, m_lastFallZ, damageReceived))
++    {
++#endif
++
+     // calculate total z distance of the fall
+     Position const& position = movementInfo.GetPos();
+     float z_diff = m_lastFallZ - position.z;
+@@ -21427,13 +21621,22 @@ void Player::HandleFall(MovementInfo const& movementInfo)
+                 if (GetDummyAura(43621))
+                     damage = GetMaxHealth() / 2;
+ 
++#ifdef ENABLE_MODULES
++                damageReceived = EnvironmentalDamage(DAMAGE_FALL, damage);
++#else
+                 EnvironmentalDamage(DAMAGE_FALL, damage);
++#endif
+             }
+ 
+             // Z given by moveinfo, LastZ, FallTime, WaterZ, MapZ, Damage, Safefall reduction
+             DEBUG_LOG("FALLDAMAGE z=%f sz=%f pZ=%f FallTime=%d mZ=%f damage=%d SF=%d", position.z, height, GetPositionZ(), movementInfo.GetFallTime(), height, damage, safe_fall);
+         }
+     }
++
++#ifdef ENABLE_MODULES
++    }
++    sModuleMgr.OnHandleFall(this, movementInfo, m_lastFallZ, damageReceived);
++#endif
+ }
+ 
+ void Player::LearnTalent(uint32 talentId, uint32 talentRank)
+@@ -21550,6 +21753,10 @@ void Player::LearnTalent(uint32 talentId, uint32 talentRank)
+     // learn! (other talent ranks will unlearned at learning)
+     learnSpell(spellid, false, true);
+     DETAIL_LOG("TalentID: %u Rank: %u Spell: %u\n", talentId, talentRank, spellid);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnLearnTalent(this, spellid);
++#endif
+ }
+ 
+ void Player::UpdateFallInformationIfNeed(MovementInfo const& minfo, uint16 opcode)
+diff --git a/src/game/Entities/Player.h b/src/game/Entities/Player.h
+index f69ecece9..2c6c276ef 100644
+--- a/src/game/Entities/Player.h
++++ b/src/game/Entities/Player.h
+@@ -1467,17 +1467,7 @@ class Player : public Unit
+         void RegenerateHealth(uint32 diff);
+ 
+         uint32 GetMoney() const { return GetUInt32Value(PLAYER_FIELD_COINAGE); }
+-        void ModifyMoney(int32 d)
+-        {
+-            if (d < 0)
+-                SetMoney(GetMoney() > uint32(-d) ? GetMoney() + d : 0);
+-            else
+-                SetMoney(GetMoney() < uint32(MAX_MONEY_AMOUNT - d) ? GetMoney() + d : MAX_MONEY_AMOUNT);
+-
+-            // "At Gold Limit"
+-            if (GetMoney() >= MAX_MONEY_AMOUNT)
+-                SendEquipError(EQUIP_ERR_TOO_MUCH_GOLD, nullptr, nullptr);
+-        }
++        void ModifyMoney(int32 d);
+         void SetMoney(uint32 value)
+         {
+             SetUInt32Value(PLAYER_FIELD_COINAGE, value);
+diff --git a/src/game/Entities/QueryHandler.cpp b/src/game/Entities/QueryHandler.cpp
+index e7c5a82d3..4491edab1 100644
+--- a/src/game/Entities/QueryHandler.cpp
++++ b/src/game/Entities/QueryHandler.cpp
+@@ -32,6 +32,10 @@
+ #include "Server/SQLStorages.h"
+ #include "Maps/GridDefines.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ void WorldSession::SendNameQueryResponse(CharacterNameQueryResponse& response) const
+ {
+     // guess size
+@@ -412,6 +416,11 @@ void WorldSession::HandlePageTextQueryOpcode(WorldPacket& recv_data)
+ {
+     DETAIL_LOG("WORLD: Received opcode CMSG_PAGE_TEXT_QUERY");
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnHandlePageTextQuery(GetPlayer(), recv_data))
++        return;
++#endif
++
+     uint32 pageID;
+     recv_data >> pageID;
+ 
+diff --git a/src/game/Entities/Unit.cpp b/src/game/Entities/Unit.cpp
+index 398a7a15f..bf41b0fdd 100644
+--- a/src/game/Entities/Unit.cpp
++++ b/src/game/Entities/Unit.cpp
+@@ -55,6 +55,10 @@
+  #include "Metric/Metric.h"
+ #endif
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ #include <math.h>
+ #include <limits>
+ #include <array>
+@@ -1056,6 +1060,10 @@ uint32 Unit::DealDamage(Unit* dealer, Unit* victim, uint32 damage, CleanDamage c
+ 
+     DEBUG_FILTER_LOG(LOG_FILTER_DAMAGE, "DealDamageEnd returned %d damage", damage);
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnDealDamage(dealer, victim, health, damage);
++#endif
++
+     return damage;
+ }
+ 
+@@ -1214,6 +1222,10 @@ void Unit::Kill(Unit* killer, Unit* victim, DamageEffectType damagetype, SpellEn
+         {
+             DEBUG_FILTER_LOG(LOG_FILTER_DAMAGE, "SET JUST_DIED");
+             victim->SetDeathState(JUST_DIED);
++
++#ifdef ENABLE_MODULES
++            sModuleMgr.OnDeath(playerVictim, killer);
++#endif
+         }
+ 
+         // playerVictim was in duel, duel must be interrupted
+@@ -1246,6 +1258,10 @@ void Unit::Kill(Unit* killer, Unit* victim, DamageEffectType damagetype, SpellEn
+     // stop combat
+     DEBUG_FILTER_LOG(LOG_FILTER_DAMAGE, "DealDamageAttackStop");
+     victim->CombatStop();
++	
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnKill(killer, victim);
++#endif
+ }
+ 
+ void Unit::HandleDamageDealt(Unit* dealer, Unit* victim, uint32& damage, CleanDamage const* cleanDamage, DamageEffectType damagetype, SpellSchoolMask damageSchoolMask, SpellEntry const* spellProto, bool duel_hasEnded)
+@@ -3334,6 +3350,11 @@ float Unit::CalculateEffectiveDodgeChance(const Unit* attacker, WeaponAttackType
+ {
+     float chance = 0.0f;
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnCalculateEffectiveDodgeChance(this, attacker, attType, ability, chance))
++        return chance;
++#endif
++
+     chance += GetDodgeChance();
+     // Own chance appears to be zero / below zero / unmeaningful for some reason (debuffs?): skip calculation, unit is incapable
+     if (chance < 0.005f)
+@@ -3362,6 +3383,11 @@ float Unit::CalculateEffectiveParryChance(const Unit* attacker, WeaponAttackType
+ {
+     float chance = 0.0f;
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnCalculateEffectiveParryChance(this, attacker, attType, ability, chance))
++        return chance;
++#endif
++
+     if (attType == RANGED_ATTACK)
+         return 0.0f;
+ 
+@@ -3398,6 +3424,11 @@ float Unit::CalculateEffectiveBlockChance(const Unit* attacker, WeaponAttackType
+ {
+     float chance = 0.0f;
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnCalculateEffectiveBlockChance(this, attacker, attType, ability, chance))
++        return chance;
++#endif
++
+     chance += GetBlockChance();
+     // Own chance appears to be zero / below zero / unmeaningful for some reason (debuffs?): skip calculation, unit is incapable
+     if (chance < 0.005f)
+@@ -3891,6 +3922,11 @@ float Unit::GetMissChance(const SpellEntry* entry, SpellSchoolMask schoolMask) c
+ float Unit::CalculateEffectiveCritChance(const Unit* victim, WeaponAttackType attType, const SpellEntry* ability) const
+ {
+     float chance = 0.0f;
++	
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnCalculateEffectiveCritChance(this, victim, attType, ability, chance))
++        return chance;
++#endif
+ 
+     chance += (ability ? GetCritChance(ability, SPELL_SCHOOL_MASK_NORMAL) : GetCritChance(attType));
+     // Own chance appears to be zero / below zero / unmeaningful for some reason (debuffs?): skip calculation, unit is incapable
+@@ -3930,6 +3966,11 @@ float Unit::CalculateEffectiveMissChance(const Unit *victim, WeaponAttackType at
+ {
+     float chance = 0.0f;
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnCalculateEffectiveMissChance(this, victim, attType, ability, m_currentSpells, SPELL_PARTIAL_RESIST_DISTRIBUTION, chance))
++        return chance;
++#endif
++
+     chance += (ability ? victim->GetMissChance(ability, SPELL_SCHOOL_MASK_NORMAL) : victim->GetMissChance(attType));
+     // Victim's own chance appears to be zero / below zero / unmeaningful for some reason (debuffs?): skip calculation, unit can't be missed
+     if (chance < 0.005f)
+@@ -4017,6 +4058,12 @@ float Unit::CalculateSpellMissChance(const Unit* victim, SpellSchoolMask schoolM
+         return 0.0f;
+ 
+     float chance = 0.0f;
++	
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnCalculateSpellMissChance(this, victim, schoolMask, spell, chance))
++        return chance;
++#endif
++	
+     const float minimum = 1.0f; // Pre-WotLK: unavoidable spell miss is at least 1%
+ 
+     if (spell->HasAttribute(SPELL_ATTR_EX3_NORMAL_RANGED_ATTACK) || spell->DmgClass == SPELL_DAMAGE_CLASS_MELEE || spell->DmgClass == SPELL_DAMAGE_CLASS_RANGED)
+@@ -7201,6 +7248,10 @@ int32 Unit::DealHeal(Unit* pVictim, uint32 addhealth, SpellEntry const* spellPro
+     if (pVictim->AI())
+         pVictim->AI()->HealedBy(this, addhealth);
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnDealHeal(unit, pVictim, gain, addhealth);
++#endif
++
+     return gain;
+ }
+ 
+@@ -12185,6 +12236,11 @@ float Unit::GetAttackDistance(Unit const* target) const
+     if (aggroRate == 0)
+         return 0.0f;
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnGetAttackDistance(this, target, aggroRate))
++        return aggroRate;
++#endif
++
+     uint32 playerlevel = target->GetLevelForTarget(this);
+     uint32 creaturelevel = GetLevelForTarget(target);
+ 
+diff --git a/src/game/Groups/Group.cpp b/src/game/Groups/Group.cpp
+index 7f1abe631..edd1c9b98 100644
+--- a/src/game/Groups/Group.cpp
++++ b/src/game/Groups/Group.cpp
+@@ -36,6 +36,10 @@
+ #include "PlayerBot/Base/PlayerbotMgr.h"
+ #endif
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ GroupMemberStatus GetGroupMemberStatus(const Player* member = nullptr)
+ {
+     uint8 flags = MEMBER_STATUS_OFFLINE;
+@@ -1484,6 +1488,11 @@ void Group::_homebindIfInstance(Player* player) const
+ 
+ static void RewardGroupAtKill_helper(Player* pGroupGuy, Unit* pVictim, uint32 count, bool PvP, float group_rate, uint32 sum_level, bool is_dungeon, Player* not_gray_member_with_max_level, Player* member_with_max_level, uint32 xp)
+ {
++#ifdef ENABLE_MODULES
++    if (!sModuleMgr.OnPreRewardPlayerAtKill(pGroupGuy, pVictim))
++    {
++#endif
++
+     // honor can be in PvP and !PvP (racial leader) cases (for alive)
+     if (pGroupGuy->IsAlive())
+         pGroupGuy->RewardHonor(pVictim, count);
+@@ -1525,6 +1534,11 @@ static void RewardGroupAtKill_helper(Player* pGroupGuy, Unit* pVictim, uint32 co
+             }
+         }
+     }
++
++#ifdef ENABLE_MODULES
++    }
++    sModuleMgr.OnRewardPlayerAtKill(pGroupGuy, pVictim);
++#endif
+ }
+ 
+ /** Provide rewards to group members at unit kill
+diff --git a/src/game/Loot/LootHandler.cpp b/src/game/Loot/LootHandler.cpp
+index c303f900e..92a453045 100644
+--- a/src/game/Loot/LootHandler.cpp
++++ b/src/game/Loot/LootHandler.cpp
+@@ -28,6 +28,10 @@
+ #include "Groups/Group.h"
+ #include "Entities/GameObject.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ void WorldSession::HandleAutostoreLootItemOpcode(WorldPacket& recv_data)
+ {
+     uint8 itemSlot;
+@@ -234,6 +238,12 @@ void WorldSession::HandleLootMasterGiveOpcode(WorldPacket& recv_data)
+         else
+             _player->SendLootError(lootguid, LOOT_ERROR_MASTER_OTHER);
+     }
++#ifdef ENABLE_MODULES
++    else
++    {
++        sModuleMgr.OnHandleLootMasterGive(pLoot, target, lootItem);
++    }
++#endif
+ }
+ 
+ void WorldSession::HandleLootMethodOpcode(WorldPacket& recv_data)
+diff --git a/src/game/Loot/LootMgr.cpp b/src/game/Loot/LootMgr.cpp
+index ae9b452be..f5661a6e7 100644
+--- a/src/game/Loot/LootMgr.cpp
++++ b/src/game/Loot/LootMgr.cpp
+@@ -31,6 +31,10 @@
+ #include <sstream>
+ #include <iomanip>
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ INSTANTIATE_SINGLETON_1(LootMgr);
+ 
+ static eConfigFloatValues const qualityToRate[MAX_ITEM_QUALITY] =
+@@ -895,7 +899,12 @@ void GroupLootRoll::Finish(RollVoteMap::const_iterator& winnerItr)
+         Player* plr = sObjectMgr.GetPlayer(winnerItr->first);
+         if (plr && plr->GetSession())
+         {
++#ifdef ENABLE_MODULES
++            InventoryResult msg = m_loot->SendItem(plr, m_itemSlot);
++            sModuleMgr.OnPlayerWinRoll(m_loot, plr, winnerItr->second.vote, winnerItr->second.number, m_itemSlot, msg);
++#else
+             m_loot->SendItem(plr, m_itemSlot);
++#endif
+         }
+         else
+         {
+@@ -929,6 +938,10 @@ void Loot::AddItem(LootStoreItem const& item)
+             m_haveItemOverThreshold = true;
+ 
+         m_lootItems.push_back(lootItem);
++
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnAddItem(this, lootItem);
++#endif
+     }
+ }
+ 
+@@ -944,6 +957,10 @@ void Loot::AddItem(uint32 itemid, uint32 count, uint32 randomSuffix, int32 rando
+         // add permission to pick this item to loot owner
+         for (auto allowedGuid : m_ownerSet)
+             lootItem->allowedGuid.emplace(allowedGuid);
++
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnAddItem(this, lootItem);
++#endif
+     }
+ }
+ 
+@@ -954,6 +971,10 @@ bool Loot::FillLoot(uint32 loot_id, LootStore const& store, Player* lootOwner, b
+     if (!lootOwner)
+         return false;
+ 
++#ifdef ENABLE_MODULES
++    if (!sModuleMgr.OnFillLoot(this, lootOwner))
++    {
++#endif
+     LootTemplate const* tab = store.GetLootFor(loot_id);
+ 
+     if (!tab)
+@@ -966,6 +987,9 @@ bool Loot::FillLoot(uint32 loot_id, LootStore const& store, Player* lootOwner, b
+     m_lootItems.reserve(MAX_NR_LOOT_ITEMS);
+ 
+     tab->Process(*this, lootOwner, store.IsRatesAllowed()); // Processing is done there, callback via Loot::AddItem()
++#ifdef ENABLE_MODULES
++    }
++#endif
+ 
+     // fill the loot owners right here so its impossible from this point to change loot result
+     Player* masterLooter = nullptr;
+@@ -1163,6 +1187,11 @@ void Loot::NotifyMoneyRemoved()
+ 
+ void Loot::GenerateMoneyLoot(uint32 minAmount, uint32 maxAmount)
+ {
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnGenerateMoneyLoot(this, m_gold))
++        return;
++#endif
++
+     if (maxAmount > 0)
+     {
+         if (maxAmount <= minAmount)
+@@ -2030,6 +2059,10 @@ InventoryResult Loot::SendItem(Player* target, LootItem* lootItem, bool sendErro
+         {
+             Item* newItem = target->StoreNewItem(dest, lootItem->itemId, true, lootItem->randomPropertyId);
+ 
++#ifdef ENABLE_MODULES
++            sModuleMgr.OnStoreItem(target, this, newItem);
++#endif
++
+             if (lootItem->freeForAll)
+             {
+                 NotifyItemRemoved(target, lootItem->lootSlot);
+@@ -2250,6 +2283,11 @@ void Loot::SendGold(Player* player)
+                 item->SetLootState(ITEM_LOOT_CHANGED);
+         }
+     }
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnSendGold(this, player, m_gold, m_lootMethod);
++#endif
++
+     m_gold = 0;
+ 
+     // animation update is done in Release if needed.
+@@ -3001,6 +3039,10 @@ void LootMgr::PlayerVote(Player* player, ObjectGuid const& lootTargetGuid, uint3
+     }
+ 
+     roll->PlayerVote(player, vote);
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnPlayerRoll(loot, player, itemSlot, vote);
++#endif
+ }
+ 
+ // Get loot by object guid
+diff --git a/src/game/Mails/MailHandler.cpp b/src/game/Mails/MailHandler.cpp
+index 692532cb7..734ed1ba8 100644
+--- a/src/game/Mails/MailHandler.cpp
++++ b/src/game/Mails/MailHandler.cpp
+@@ -39,6 +39,10 @@
+ #include "Chat/Chat.h"
+ #include "Anticheat/Anticheat.hpp"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ #define MAX_INBOX_CLIENT_UI_CAPACITY 50
+ 
+ bool WorldSession::CheckMailBox(ObjectGuid guid) const
+@@ -300,6 +304,10 @@ void WorldSession::HandleSendMail(WorldPacket& recv_data)
+     CharacterDatabase.BeginTransaction();
+     pl->SaveInventoryAndGoldToDB();
+     CharacterDatabase.CommitTransaction();
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnSendMail(pl, rc, reqmoney);
++#endif
+ }
+ 
+ /**
+diff --git a/src/game/Quests/QuestHandler.cpp b/src/game/Quests/QuestHandler.cpp
+index be2ddf4eb..11401a514 100644
+--- a/src/game/Quests/QuestHandler.cpp
++++ b/src/game/Quests/QuestHandler.cpp
+@@ -35,6 +35,10 @@
+ #include "PlayerBot/Base/PlayerbotAI.h"
+ #endif
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket& recv_data)
+ {
+     ObjectGuid guid;
+@@ -105,10 +109,18 @@ void WorldSession::HandleQuestgiverHelloOpcode(WorldPacket& recv_data)
+     if (uint32 pauseTimer = pCreature->GetInteractionPauseTimer())
+         pCreature->GetMotionMaster()->PauseWaypoints(pauseTimer);
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnPreGossipHello(_player, pCreature->GetObjectGuid()))
++        return;
++#endif
++
+     if (sScriptDevAIMgr.OnGossipHello(_player, pCreature))
+         return;
+ 
+     _player->PrepareGossipMenu(pCreature, pCreature->GetDefaultGossipMenuId());
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnGossipHello(_player, pCreature->GetObjectGuid());
++#endif
+     _player->SendPreparedGossip(pCreature);
+ }
+ 
+@@ -461,6 +473,10 @@ void WorldSession::HandleQuestLogRemoveQuest(WorldPacket& recv_data)
+             }
+ 
+             _player->SetQuestStatus(quest, QUEST_STATUS_NONE);
++
++#ifdef ENABLE_MODULES
++            sModuleMgr.OnAbandonQuest(_player, quest);
++#endif
+         }
+ 
+         _player->SetQuestSlot(slot, 0);
+diff --git a/src/game/Reputation/ReputationMgr.cpp b/src/game/Reputation/ReputationMgr.cpp
+index 5bd19be84..b89298fca 100644
+--- a/src/game/Reputation/ReputationMgr.cpp
++++ b/src/game/Reputation/ReputationMgr.cpp
+@@ -22,6 +22,10 @@
+ #include "Server/WorldPacket.h"
+ #include "Globals/ObjectMgr.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ const int32 ReputationMgr::PointsInRank[MAX_REPUTATION_RANK] = {36000, 3000, 3000, 3000, 6000, 12000, 21000, 1000};
+ 
+ ReputationRank ReputationMgr::ReputationToRank(int32 standing)
+@@ -383,6 +387,10 @@ bool ReputationMgr::SetOneFactionReputation(FactionEntry const* factionEntry, in
+ 
+         m_player->ReputationChanged(factionEntry);
+ 
++#ifdef ENABLE_MODULES
++        sModuleMgr.OnSetReputation(m_player, factionEntry, standing, incremental);
++#endif
++
+         if (rankNew > rankOld)
+             return true;
+     }
+diff --git a/src/game/Server/DBCStores.cpp b/src/game/Server/DBCStores.cpp
+index 7e4d030c9..967d539d9 100644
+--- a/src/game/Server/DBCStores.cpp
++++ b/src/game/Server/DBCStores.cpp
+@@ -184,7 +184,11 @@ DBCStorage <TransportAnimationEntry> sTransportAnimationStore(TransportAnimation
+ DBCStorage <TotemCategoryEntry> sTotemCategoryStore(TotemCategoryEntryfmt);
+ DBCStorage <WMOAreaTableEntry>  sWMOAreaTableStore(WMOAreaTableEntryfmt);
+ DBCStorage <WorldMapAreaEntry>  sWorldMapAreaStore(WorldMapAreaEntryfmt);
++#ifdef ENABLE_MODULES
++DBCStorage <WorldMapOverlayEntry> sWorldMapOverlayStore(WorldMapOverlayEntryfmt);
++#else
+ // DBCStorage <WorldMapOverlayEntry> sWorldMapOverlayStore(WorldMapOverlayEntryfmt);
++#endif
+ 
+ typedef std::list<std::string> StoreProblemList;
+ 
+@@ -611,7 +615,11 @@ void LoadDBCStores(const std::string& dataPath)
+             sWMOAreaInfoByTripple[WMOAreaTableTripple(entry->rootId, entry->adtId, entry->groupId)].push_back(entry);
+         }
+     }
++#ifdef ENABLE_MODULES
++    LoadDBC(availableDbcLocales,bar,bad_dbc_files,sWorldMapOverlayStore,     dbcPath,"WorldMapOverlay.dbc");
++#else
+     // LoadDBC(availableDbcLocales,bar,bad_dbc_files,sWorldMapOverlayStore,     dbcPath,"WorldMapOverlay.dbc");
++#endif
+     // LoadDBC(availableDbcLocales, bar, bad_dbc_files, sWorldSafeLocsStore,       dbcPath, "WorldSafeLocs.dbc");
+ 
+     // error checks
+diff --git a/src/game/Server/DBCStores.h b/src/game/Server/DBCStores.h
+index e1071f17e..1c8aa5b1e 100644
+--- a/src/game/Server/DBCStores.h
++++ b/src/game/Server/DBCStores.h
+@@ -174,8 +174,13 @@ extern TaxiPathNodesByPath                       sTaxiPathNodesByPath;
+ extern DBCStorage <TransportAnimationEntry>      sTransportAnimationStore;
+ extern DBCStorage <TotemCategoryEntry>           sTotemCategoryStore;
+ extern DBCStorage <WMOAreaTableEntry>            sWMOAreaTableStore;
+-// extern DBCStorage <WorldMapAreaEntry>           sWorldMapAreaStore; -- use Zone2MapCoordinates and Map2ZoneCoordinates
++#ifdef ENABLE_MODULES
++extern DBCStorage <WorldMapAreaEntry>            sWorldMapAreaStore;
++extern DBCStorage <WorldMapOverlayEntry>         sWorldMapOverlayStore;
++#else
++// extern DBCStorage <WorldMapAreaEntry>            sWorldMapAreaStore; -- use Zone2MapCoordinates and Map2ZoneCoordinates
+ // extern DBCStorage <WorldMapOverlayEntry>         sWorldMapOverlayStore; -- not used currently
++#endif
+ 
+ void LoadDBCStores(const std::string& dataPath);
+ 
+diff --git a/src/game/Server/DBCStructure.h b/src/game/Server/DBCStructure.h
+index 268908db9..8cac9b229 100644
+--- a/src/game/Server/DBCStructure.h
++++ b/src/game/Server/DBCStructure.h
+@@ -1319,6 +1319,26 @@ struct WorldMapAreaEntry
+     int32   virtual_map_id;                                 // 8        m_displayMapID -1 (map_id have correct map) other: virtual map where zone show (map_id - where zone in fact internally)
+ };
+ 
++#ifdef ENABLE_MODULES
++#define MAX_WORLD_MAP_OVERLAY_AREA_IDX 4
++struct WorldMapOverlayEntry
++{
++    uint32    ID;                                           // 0        m_ID
++    // uint32    worldMapAreaId;                            // 1        m_mapAreaID (WorldMapArea.dbc)
++    uint32    areatableID[MAX_WORLD_MAP_OVERLAY_AREA_IDX];  // 2-5      m_areaID
++                                                            // 6        m_mapPointX
++                                                            // 7        m_mapPointY
++    // char* internal_name                                  // 8        m_textureName
++                                                            // 9        m_textureWidth
++                                                            // 10       m_textureHeight
++                                                            // 11       m_offsetX
++                                                            // 12       m_offsetY
++                                                            // 13       m_hitRectTop
++                                                            // 14       m_hitRectLeft
++                                                            // 15       m_hitRectBottom
++                                                            // 16       m_hitRectRight
++};
++#else
+ /* not used in 2.4.3 code
+ #define MAX_WORLD_MAP_OVERLAY_AREA_IDX 4
+ 
+@@ -1340,6 +1360,7 @@ struct WorldMapOverlayEntry
+                                                             // 16       m_hitRectRight
+ };
+ */
++#endif
+ 
+ /* Structure WorldSafeLocsEntry is no longer loaded from DBC but from DB instead
+ struct WorldSafeLocsEntry
+diff --git a/src/game/Server/DBCfmt.h b/src/game/Server/DBCfmt.h
+index 6ebf56069..0ffa24e6f 100644
+--- a/src/game/Server/DBCfmt.h
++++ b/src/game/Server/DBCfmt.h
+@@ -112,7 +112,11 @@ const char TransportAnimationfmt[] = "diifffx";
+ const char TotemCategoryEntryfmt[] = "nxxxxxxxxxxxxxxxxxii";
+ const char WMOAreaTableEntryfmt[] = "niiixxxxxiissssssssssssssssx";
+ const char WorldMapAreaEntryfmt[] = "xinxffffi";
++#ifdef ENABLE_MODULES
++const char WorldMapOverlayEntryfmt[]="nxiiiixxxxxxxxxxx";
++#else
+ // const char WorldMapOverlayEntryfmt[]="nxiiiixxxxxxxxxxx";
++#endif
+ const char WorldSafeLocsEntryfmt[] = "nifffxxxxxxxxxxxxxxxxx";
+ 
+ #endif
+diff --git a/src/game/Spells/Spell.cpp b/src/game/Spells/Spell.cpp
+index 042bd3f1b..8d7e3d040 100644
+--- a/src/game/Spells/Spell.cpp
++++ b/src/game/Spells/Spell.cpp
+@@ -51,6 +51,10 @@
+ #include "playerbot/PlayerbotAI.h"
+ #endif
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ extern pEffect SpellEffects[MAX_SPELL_EFFECTS];
+ 
+ class PrioritizeManaUnitWraper
+@@ -1351,6 +1355,10 @@ void Spell::DoAllEffectOnTarget(TargetInfo* target)
+             Unit::ProcDamageAndSpell(ProcSystemArguments(affectiveCaster, procAttacker & PROC_FLAG_ON_TRAP_ACTIVATION ? m_targets.getUnitTarget() : unit, affectiveCaster ? procAttacker : uint32(PROC_FLAG_NONE), procVictim, procEx, 0, 0, m_attackType, m_spellInfo, this));
+     }
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnHit(this, (Unit*)caster, unitTarget);
++#endif
++
+     OnAfterHit();
+ 
+     if (unit->IsCreature())
+@@ -3401,6 +3409,10 @@ SpellCastResult Spell::cast(bool skipCheck)
+ 
+     OnCast();
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnCast(this, m_caster, m_targets.getUnitTarget());
++#endif
++
+     if (!m_IsTriggeredSpell && !m_trueCaster->IsGameObject() && !m_spellInfo->HasAttribute(SPELL_ATTR_EX2_NOT_AN_ACTION))
+         m_caster->RemoveAurasOnCast(AURA_INTERRUPT_FLAG_ACTION_LATE, m_spellInfo);
+ 
+diff --git a/src/game/Spells/SpellHandler.cpp b/src/game/Spells/SpellHandler.cpp
+index 194933a14..3d648681e 100644
+--- a/src/game/Spells/SpellHandler.cpp
++++ b/src/game/Spells/SpellHandler.cpp
+@@ -30,6 +30,10 @@
+ #include "Spells/SpellAuras.h"
+ #include "Loot/LootMgr.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
+ {
+     uint8 bagIndex, slot;
+@@ -164,6 +168,11 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
+ 
+     _player->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_ITEM_USE);
+ 
++#ifdef ENABLE_MODULES
++    if (sModuleMgr.OnUseItem(pUser, pItem))
++        return;
++#endif
++
+     // Note: If script stop casting it must send appropriate data to client to prevent stuck item in gray state.
+     if (!sScriptDevAIMgr.OnItemUse(pUser, pItem, targets))
+     {
+diff --git a/src/game/Tools/PlayerDump.cpp b/src/game/Tools/PlayerDump.cpp
+index 3e15cc572..dce2f313f 100644
+--- a/src/game/Tools/PlayerDump.cpp
++++ b/src/game/Tools/PlayerDump.cpp
+@@ -24,6 +24,10 @@
+ #include "Globals/ObjectMgr.h"
+ #include "Accounts/AccountMgr.h"
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ // Character Dump tables
+ struct DumpTable
+ {
+@@ -394,6 +398,10 @@ DumpReturn PlayerDumpWriter::WriteDump(const std::string& file, uint32 guid)
+ 
+     std::string dump = GetDump(guid);
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnWriteDump(guid, dump);
++#endif
++
+     fprintf(fout, "%s\n", dump.c_str());
+     fclose(fout);
+     return DUMP_SUCCESS;
+@@ -513,8 +521,17 @@ DumpReturn PlayerDumpReader::LoadDump(const std::string& file, uint32 account, s
+ 
+         if (!dTable->isValid())
+         {
++#ifdef ENABLE_MODULES
++            type = DTT_CHAR_TABLE;
++            if (!sModuleMgr.IsModuleDumpTable(tn))
++            {
++                sLog.outError("LoadPlayerDump: Unknown table: '%s'!", tn.c_str());
++                ROLLBACK(DUMP_FILE_BROKEN);
++            }
++#else
+             sLog.outError("LoadPlayerDump: Unknown table: '%s'!", tn.c_str());
+             ROLLBACK(DUMP_FILE_BROKEN);
++#endif
+         }
+ 
+         bool execute_ok = true;                             // false, if need skip soem query
+diff --git a/src/game/World/World.cpp b/src/game/World/World.cpp
+index c2660c537..e6a842c70 100644
+--- a/src/game/World/World.cpp
++++ b/src/game/World/World.cpp
+@@ -82,6 +82,10 @@
+ #include "playerbot/RandomPlayerbotMgr.h"
+ #endif
+ 
++#ifdef ENABLE_MODULES
++#include "ModuleMgr.h"
++#endif
++
+ #include <algorithm>
+ #include <mutex>
+ #include <cstdarg>
+@@ -896,6 +900,10 @@ void World::SetInitialWorldSettings()
+         exit(1);
+     }
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnWorldPreInitialized();
++#endif
++
+     ///- Loading strings. Getting no records means core load has to be canceled because no error message can be output.
+     sLog.outString("Loading MaNGOS strings...");
+     if (!sObjectMgr.LoadMangosStrings())
+@@ -1459,6 +1467,10 @@ void World::SetInitialWorldSettings()
+     sPlayerbotAIConfig.Initialize();
+ #endif
+ 
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnWorldInitialized();
++#endif
++
+     sLog.outString("---------------------------------------");
+     sLog.outString("      CMANGOS: World initialized       ");
+     sLog.outString("---------------------------------------");
+@@ -1723,6 +1735,10 @@ void World::Update(uint32 diff)
+     meas.add_field("singletons", std::to_string(singletons));
+     meas.add_field("cleanup", std::to_string(cleanup));
+ #endif
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnWorldUpdated(diff);
++#endif
+ }
+ 
+ namespace MaNGOS
+-- 
+2.33.1.windows.1
+

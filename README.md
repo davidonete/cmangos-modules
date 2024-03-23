@@ -15,9 +15,9 @@ NOTE: At the moment there is no officially supported way for installing this sys
 ## Use already merged code
 This guide will use the source code where all the module code is already in place and ready to be used, however this source code is not the latest CMangos version and gets synced with the CMangos source code every couple of months.
 1. Follow the guide in the [Installation Instructions](https://github.com/cmangos/issues/wiki/Installation-Instructions) until you reach the [Clone CMangos section](https://github.com/cmangos/issues/wiki/Installation-Instructions#clone-cmangos). Instead of using the stock cmangos repository, use one of the following depending on the core version you want:
-  - Classic: ```git clone https://github.com/celguar/mangos-classic.git -b ike3-bots```
-  - TBC: ```git clone https://github.com/celguar/mangos-tbc.git -b ike3-bots```
-  - WoTLK: ```git clone https://github.com/celguar/mangos-wotlk.git -b ike3-bots```
+  - Classic: ```git clone https://github.com/davidonete/mangos-classic.git -b modules```
+  - TBC: ```git clone https://github.com/davidonete/mangos-tbc.git -b modules```
+  - WoTLK: ```git clone https://github.com/davidonete/mangos-wotlk.git -b modules```
 2.  Once you have it cloned continue following the guide until you reach the [Compiling CMangos section](https://github.com/cmangos/issues/wiki/Installation-Instructions#compiling-cmangos-windows). In this section you will have to define the flags for enabling the module system as well as the individual modules that you want to compile. The flag required for each module can be found on the installation instructions for each module. Example:
 
 ```
@@ -43,7 +43,7 @@ Where `-G "Visual Studio 16 2019"` is the visual studio version you have, `-B bi
 You can patch the latest cmangos core to have the required modules code added on top of it. Be aware that this patches can fail if cmangos changes parts of code that the module system depends on. 
 To apply a patch download one of the following patch files depending on your core version:
   - Classic: https://github.com/davidonete/cmangos-modules/blob/main/patches/classic.patch
-  - TBC: TBD
+  - TBC: https://github.com/davidonete/cmangos-modules/blob/main/patches/tbc.patch
   - WotLK: TBD
 Open the command line and navigate to the core repository and apply the patch with this command
 ```

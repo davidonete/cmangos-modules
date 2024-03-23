@@ -45,6 +45,7 @@ To apply a patch download one of the following patch files depending on your cor
   - Classic: https://github.com/davidonete/cmangos-modules/blob/main/patches/classic.patch
   - TBC: https://github.com/davidonete/cmangos-modules/blob/main/patches/tbc.patch
   - WotLK: TBD
+    
 Open the command line and navigate to the core repository and apply the patch with this command
 ```
 git apply <patch file>

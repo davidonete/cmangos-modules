@@ -8,7 +8,7 @@ function(capitalize_first_letter INPUT_STRING OUTPUT_VARIABLE)
 endfunction()
 
 # Generate global include for all active modules
-set(SKIP_FOLDERS "Bots" "modules")
+set(SKIP_FOLDERS "PlayerBots" "modules")
 set(ALL_MODULE_HEADERS "")
 
 file(GLOB SUBDIRECTORIES LIST_DIRECTORIES true ${CMAKE_SOURCE_DIR}/src/modules/*)

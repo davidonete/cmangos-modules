@@ -11,7 +11,7 @@ ModuleConfig::ModuleConfig(const std::string& filename)
 
 bool ModuleConfig::Load()
 {
-    if (config.SetSource(SYSCONFDIR + filename))
+    if (config.SetSource(SYSCONFDIR + filename, ""))
     {
         return OnLoad();
     }

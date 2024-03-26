@@ -36,6 +36,7 @@ foreach(HEADER ${ALL_MODULE_HEADERS})
 endforeach()
 
 # Base files
+include_directories(${CMAKE_SOURCE_DIR}/src/modules/modules/src/)
 file(GLOB modules_source ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
     source_group("modules" FILES ${modules_source})
 	

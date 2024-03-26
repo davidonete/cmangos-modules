@@ -23,13 +23,21 @@ foreach(SUBDIR ${SUBDIRECTORIES})
   endif()
 endforeach()
 
-# Generate header file that includes all active modules
-set(OUTPUT_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/src/Modules.h)
-file(WRITE ${OUTPUT_HEADER} "// Auto-generated file\n")
+# Generate files that initialize all active modules
+set(OUTPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/Modules.cpp)
+file(WRITE ${OUTPUT_FILE} "// Auto-generated file\n\n")
 foreach(MODULE_NAME ${MODULE_NAMES})
   capitalize_first_letter(${MODULE_NAME} CAPITALIZED_MODULE_NAME)
-  file(APPEND ${OUTPUT_HEADER} "#include \"${CAPITALIZED_MODULE_NAME}Module.h\"\n")
+  file(APPEND ${OUTPUT_FILE} "#include \"${CAPITALIZED_MODULE_NAME}Module.h\"\n")
 endforeach()
+file(WRITE ${OUTPUT_FILE} "{\n")
+file(WRITE ${OUTPUT_FILE} "void AddModules()\n")
+file(WRITE ${OUTPUT_FILE} "{\n")
+foreach(MODULE_NAME ${MODULE_NAMES})
+  capitalize_first_letter(${MODULE_NAME} CAPITALIZED_MODULE_NAME)
+  file(APPEND ${OUTPUT_FILE} "    new ${CAPITALIZED_MODULE_NAME}Module();\n")
+endforeach()
+file(WRITE ${OUTPUT_FILE} "}\n")
 
 # Base files
 include_directories(${CMAKE_SOURCE_DIR}/src/modules/modules/src/)

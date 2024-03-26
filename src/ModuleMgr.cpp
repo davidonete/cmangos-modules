@@ -21,6 +21,8 @@ void ModuleMgr::RegisterModule(Module* module, const std::string& name)
 
 void ModuleMgr::OnWorldPreInitialized()
 {
+    AddModules();
+
     for (const auto& pair : modules)
     {
         Module* module = pair.second;

@@ -7,10 +7,9 @@ function(capitalize_first_letter INPUT_STRING OUTPUT_VARIABLE)
   set(${OUTPUT_VARIABLE} "${FIRST_LETTER_UPPER}${REMAINING_STRING}" PARENT_SCOPE)
 endfunction()
 
-# Generate global include for all active modules
+# Get all active modules
 set(SKIP_FOLDERS "PlayerBots" "modules")
-set(ALL_MODULE_HEADERS "")
-
+set(MODULE_NAMES "")
 file(GLOB SUBDIRECTORIES LIST_DIRECTORIES true ${CMAKE_SOURCE_DIR}/src/modules/*)
 foreach(SUBDIR ${SUBDIRECTORIES})
   get_filename_component(FOLDER_NAME ${SUBDIR} NAME)
@@ -18,27 +17,24 @@ foreach(SUBDIR ${SUBDIRECTORIES})
   list(FIND SKIP_FOLDERS ${FOLDER_NAME} SKIP_INDEX)
   if (SKIP_INDEX EQUAL -1)
     string(TOUPPER ${FOLDER_NAME} UPPER_FOLDER_NAME)
-	capitalize_first_letter(${FOLDER_NAME} CAPITALIZED_FOLDER_NAME)
     if(BUILD_MODULE_${UPPER_FOLDER_NAME})
-      #list(APPEND ALL_MODULE_HEADERS "${CMAKE_SOURCE_DIR}/src/modules/${FOLDER_NAME}/src/${CAPITALIZED_FOLDER_NAME}Module.h")
-	  list(APPEND ALL_MODULE_HEADERS "${CAPITALIZED_FOLDER_NAME}Module.h")
-	  include_directories(${CMAKE_SOURCE_DIR}/src/modules/${FOLDER_NAME}/src/)
+	  list(APPEND MODULE_NAMES ${FOLDER_NAME})
 	endif()
   endif()
 endforeach()
 
+# Generate header file that includes all active modules
 set(OUTPUT_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/src/Modules.h)
 file(WRITE ${OUTPUT_HEADER} "// Auto-generated file\n")
-foreach(HEADER ${ALL_MODULE_HEADERS})
-  #file(RELATIVE_PATH RELATIVE_PATH_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/src ${HEADER})
-  #file(APPEND ${OUTPUT_HEADER} "#include \"${RELATIVE_PATH_HEADER}\"\n")
-  file(APPEND ${OUTPUT_HEADER} "#include \"${HEADER}\"\n")
+foreach(MODULE_NAME ${ALL_MODULES})
+  capitalize_first_letter(${MODULE_NAME} CAPITALIZED_MODULE_NAME)
+  file(APPEND ${OUTPUT_HEADER} "#include \"${CAPITALIZED_MODULE_NAME}\"Module.h\n")
 endforeach()
 
 # Base files
 include_directories(${CMAKE_SOURCE_DIR}/src/modules/modules/src/)
 file(GLOB modules_source ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
-    source_group("modules" FILES ${modules_source})
+  source_group("modules" FILES ${modules_source})
 	
 # Define base source library
 set(LIBRARY_SRCS ${modules_source})
@@ -46,10 +42,15 @@ set(LIBRARY_SRCS ${modules_source})
 add_library(${LIBRARY_NAME} STATIC ${LIBRARY_SRCS})
 
 target_link_libraries(${LIBRARY_NAME}
-    transmog
-	shared
-	RecastNavigation::Detour
+  shared
+  RecastNavigation::Detour
 )
+
+# Include and link all modules
+foreach(MODULE_NAME ${ALL_MODULES})
+  include_directories(${CMAKE_SOURCE_DIR}/src/modules/${MODULE_NAME}/src/)
+  target_link_libraries(${LIBRARY_NAME} ${MODULE_NAME})
+endforeach()
 
 include_directories(${CMAKE_SOURCE_DIR}/dep/g3dlite)
 add_definitions(-DENABLE_MODULES)
@@ -57,8 +58,8 @@ add_definitions(-DENABLE_MODULES)
 set_target_properties(${LIBRARY_NAME} PROPERTIES PROJECT_LABEL "Modules")
 
 if(UNIX)
-	# Both systems don't have libdl and don't need them
-	if (NOT (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD"))
-		target_link_libraries(${LIBRARY_NAME} dl)
-	endif()
+  # Both systems don't have libdl and don't need them
+  if (NOT (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD"))
+    target_link_libraries(${LIBRARY_NAME} dl)
+  endif()
 endif()

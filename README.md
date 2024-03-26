@@ -21,7 +21,7 @@ This guide will use the source code where all the module code is already in plac
 2.  Once you have it cloned continue following the guide until you reach the [Compiling CMangos section](https://github.com/cmangos/issues/wiki/Installation-Instructions#compiling-cmangos-windows). In this section you will have to define the flags for enabling the module system as well as the individual modules that you want to compile. The flag required for each module can be found on the installation instructions for each module. Example:
 
 ```
-cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DBUILD_MODULES -DBUILD_MODULE_ACHIEVEMENTS=ON -DBUILD_MODULE_IMMERSIVE=ON
+cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DBUILD_MODULES=ON -DBUILD_MODULE_ACHIEVEMENTS=ON -DBUILD_MODULE_IMMERSIVE=ON
 ```
 
 If you want to generate the visual studio solution instead you can do it with either the Cmake UI:

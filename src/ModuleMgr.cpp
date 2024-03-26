@@ -8,25 +8,26 @@
 
 ModuleMgr::~ModuleMgr()
 {
+    for (Module* module : modules)
+    {
+        delete module;
+        module = nullptr;
+    }
+
     modules.clear();
 }
 
-void ModuleMgr::RegisterModule(Module* module, const std::string& name)
+void ModuleMgr::RegisterModule(Module* module)
 {
-    auto it = modules.find(name);
-    if (it == modules.end())
-    {
-        modules.insert(std::make_pair(name, module));
-    }
+    modules.push_back(module);
 }
 
 void ModuleMgr::OnWorldPreInitialized()
 {
     AddModules();
 
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->LoadConfig();
         module->OnWorldPreInitialized();
     }
@@ -34,9 +35,8 @@ void ModuleMgr::OnWorldPreInitialized()
 
 void ModuleMgr::OnWorldInitialized()
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->Initialize();
         module->OnWorldInitialized();
     }
@@ -44,9 +44,8 @@ void ModuleMgr::OnWorldInitialized()
 
 void ModuleMgr::OnWorldUpdated(uint32 elapsed)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnUpdate(elapsed);
         module->OnWorldUpdated(elapsed);
     }
@@ -55,9 +54,8 @@ void ModuleMgr::OnWorldUpdated(uint32 elapsed)
 bool ModuleMgr::OnUseItem(Player* player, Item* item)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnUseItem(player, item))
         {
             overriden = true;
@@ -77,9 +75,8 @@ bool ModuleMgr::OnPreGossipHello(Player* player, const ObjectGuid& guid)
             Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
             if (creature)
             {
-                for (const auto& pair : modules)
+                for (Module* module : modules)
                 {
-                    Module* module = pair.second;
                     if (module->OnPreGossipHello(player, creature))
                     {
                         overriden = true;
@@ -92,9 +89,8 @@ bool ModuleMgr::OnPreGossipHello(Player* player, const ObjectGuid& guid)
             GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
             if (gameObject)
             {
-                for (const auto& pair : modules)
+                for (Module* module : modules)
                 {
-                    Module* module = pair.second;
                     if (module->OnPreGossipHello(player, gameObject))
                     {
                         overriden = true;
@@ -116,9 +112,8 @@ void ModuleMgr::OnGossipHello(Player* player, const ObjectGuid& guid)
             Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
             if (creature)
             {
-                for (const auto& pair : modules)
+                for (Module* module : modules)
                 {
-                    Module* module = pair.second;
                     module->OnGossipHello(player, creature);
                 }
             }
@@ -128,9 +123,8 @@ void ModuleMgr::OnGossipHello(Player* player, const ObjectGuid& guid)
             GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
             if (gameObject)
             {
-                for (const auto& pair : modules)
+                for (Module* module : modules)
                 {
-                    Module* module = pair.second;
                     module->OnGossipHello(player, gameObject);
                 }
             }
@@ -148,9 +142,8 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
             Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
             if (creature)
             {
-                for (const auto& pair : modules)
+                for (Module* module : modules)
                 {
-                    Module* module = pair.second;
                     if (module->OnGossipSelect(player, creature, sender, action, code, gossipListId))
                     {
                         overriden = true;
@@ -163,9 +156,8 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
             GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
             if (gameObject)
             {
-                for (const auto& pair : modules)
+                for (Module* module : modules)
                 {
-                    Module* module = pair.second;
                     if (module->OnGossipSelect(player, gameObject, sender, action, code, gossipListId))
                     {
                         overriden = true;
@@ -178,9 +170,8 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
             Item* item = player->GetItemByGuid(guid);
             if (item)
             {
-                for (const auto& pair : modules)
+                for (Module* module : modules)
                 {
-                    Module* module = pair.second;
                     if (module->OnGossipSelect(player, item, sender, action, code, gossipListId))
                     {
                         overriden = true;
@@ -195,18 +186,16 @@ bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 se
 
 void ModuleMgr::OnLearnTalent(Player* player, uint32 spellId)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnLearnTalent(player, spellId);
     }
 }
 
 void ModuleMgr::OnResetTalents(Player* player, uint32 cost)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnResetTalents(player, cost);
     }
 }
@@ -216,9 +205,8 @@ void ModuleMgr::OnPreLoadFromDB(Player* player)
     if (player)
     {
         const uint32 playerId = player->GetObjectGuid().GetCounter();
-        for (const auto& pair : modules)
+        for (Module* module : modules)
         {
-            Module* module = pair.second;
             module->OnPreLoadFromDB(player);
             module->OnPreLoadFromDB(playerId);
         }
@@ -228,54 +216,48 @@ void ModuleMgr::OnPreLoadFromDB(Player* player)
 
 void ModuleMgr::OnLoadFromDB(Player* player)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnLoadFromDB(player);
     }
 }
 
 void ModuleMgr::OnSaveToDB(Player* player)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnSaveToDB(player);
     }
 }
 
 void ModuleMgr::OnDeleteFromDB(uint32 playerId)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnDeleteFromDB(playerId);
     }
 }
 
 void ModuleMgr::OnLogOut(Player* player)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnLogOut(player);
     }
 }
 
 void ModuleMgr::OnPreCharacterCreated(Player* player)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnPreCharacterCreated(player);
     }
 }
 
 void ModuleMgr::OnCharacterCreated(Player* player)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnCharacterCreated(player);
     }
 }
@@ -283,9 +265,8 @@ void ModuleMgr::OnCharacterCreated(Player* player)
 bool ModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList& actionButtons)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnLoadActionButtons(player, actionButtons))
         {
             overriden = true;
@@ -298,9 +279,8 @@ bool ModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList& actionButt
 bool ModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList(&actionButtons)[2])
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         for (auto& actionButton : actionButtons)
         {
             if (module->OnLoadActionButtons(player, actionButton))
@@ -321,9 +301,8 @@ bool ModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList(&actionButt
 bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList& actionButtons)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnSaveActionButtons(player, actionButtons))
         {
             overriden = true;
@@ -336,9 +315,8 @@ bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList& actionButt
 bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList(&actionButtons)[2])
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         for (auto& actionButton : actionButtons)
         {
             if (module->OnSaveActionButtons(player, actionButton))
@@ -359,9 +337,8 @@ bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList(&actionButt
 bool ModuleMgr::OnPreHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32& outDamage)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnPreHandleFall(player, movementInfo, lastFallZ, outDamage))
         {
             overriden = true;
@@ -373,9 +350,8 @@ bool ModuleMgr::OnPreHandleFall(Player* player, const MovementInfo& movementInfo
 
 void ModuleMgr::OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32 damage)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnHandleFall(player, movementInfo, lastFallZ, damage);
     }
 }
@@ -383,9 +359,8 @@ void ModuleMgr::OnHandleFall(Player* player, const MovementInfo& movementInfo, f
 bool ModuleMgr::OnPreResurrect(Player* player)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnPreResurrect(player))
         {
             overriden = true;
@@ -397,162 +372,144 @@ bool ModuleMgr::OnPreResurrect(Player* player)
 
 void ModuleMgr::OnResurrect(Player* player)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnResurrect(player);
     }
 }
 
 void ModuleMgr::OnReleaseSpirit(Player* player, const WorldSafeLocsEntry* closestGrave)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnReleaseSpirit(player, closestGrave);
     }
 }
 
 void ModuleMgr::OnDeath(Player* player, Unit* killer)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnDeath(player, killer);
     }
 }
 
 void ModuleMgr::OnDeath(Player* player, uint8 environmentalDamageType)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnDeath(player, environmentalDamageType);
     }
 }
 
 void ModuleMgr::OnGiveXP(Player* player, uint32 xp, Creature* victim)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnGiveXP(player, xp, victim);
     }
 }
 
 void ModuleMgr::OnGiveLevel(Player* player, uint32 level)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnGiveLevel(player, level);
     }
 }
 
 void ModuleMgr::OnModifyMoney(Player* player, int32 diff)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnModifyMoney(player, diff);
     }
 }
 
 void ModuleMgr::OnSetReputation(Player* player, const FactionEntry* factionEntry, int32 standing, bool incremental)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnSetReputation(player, factionEntry, standing, incremental);
     }
 }
 
 void ModuleMgr::OnRewardQuest(Player* player, const Quest* quest)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnRewardQuest(player, quest);
     }
 }
 
 void ModuleMgr::OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnGetPlayerLevelInfo(player, info);
     }
 }
 
 void ModuleMgr::OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnSetVisibleItemSlot(player, slot, item);
     }
 }
 
 void ModuleMgr::OnMoveItemFromInventory(Player* player, Item* item)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnMoveItemFromInventory(player, item);
     }
 }
 
 void ModuleMgr::OnMoveItemToInventory(Player* player, Item* item)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnMoveItemToInventory(player, item);
     }
 }
 
 void ModuleMgr::OnStoreItem(Player* player, Loot* loot, Item* item)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnStoreItem(player, loot, item);
     }
 }
 
 void ModuleMgr::OnStoreItem(Player* player, Item* item)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnStoreItem(player, item);
     }
 }
 
 void ModuleMgr::OnAddSpell(Player* player, uint32 spellId)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnAddSpell(player, spellId);
     }
 }
 
 void ModuleMgr::OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnDuelComplete(player, opponent, duelCompleteType);
     }
 }
 
 void ModuleMgr::OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnKilledMonsterCredit(player, entry, guid);
     }
 }
@@ -560,9 +517,8 @@ void ModuleMgr::OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& 
 bool ModuleMgr::OnPreRewardPlayerAtKill(Player* player, Unit* victim)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnPreRewardPlayerAtKill(player, victim))
         {
             overriden = true;
@@ -574,9 +530,8 @@ bool ModuleMgr::OnPreRewardPlayerAtKill(Player* player, Unit* victim)
 
 void ModuleMgr::OnRewardPlayerAtKill(Player* player, Unit* victim)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnRewardPlayerAtKill(player, victim);
     }
 }
@@ -584,9 +539,8 @@ void ModuleMgr::OnRewardPlayerAtKill(Player* player, Unit* victim)
 bool ModuleMgr::OnHandlePageTextQuery(Player* player, const WorldPacket& packet)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnHandlePageTextQuery(player, packet))
         {
             overriden = true;
@@ -598,63 +552,56 @@ bool ModuleMgr::OnHandlePageTextQuery(Player* player, const WorldPacket& packet)
 
 void ModuleMgr::OnUpdateSkill(Player* player, uint16 skillId)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnUpdateSkill(player, skillId);
     }
 }
 
 void ModuleMgr::OnRewardHonor(Player* player, Unit* victim)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnRewardHonor(player, victim);
     }
 }
 
 void ModuleMgr::OnEquipItem(Player* player, Item* item)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnEquipItem(player, item);
     }
 }
 
 void ModuleMgr::OnTaxiFlightRouteStart(Player* player, const Taxi::Tracker& taxiTracker, bool initial)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnTaxiFlightRouteStart(player, taxiTracker, initial);
     }
 }
 
 void ModuleMgr::OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker& taxiTracker, bool final)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnTaxiFlightRouteEnd(player, taxiTracker, final);
     }
 }
 
 void ModuleMgr::OnEmote(Player* player, Unit* target, uint32 emote)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnEmote(player, target, emote);
     }
 }
 
 void ModuleMgr::OnBuyBankSlot(Player* player, uint32 slot, uint32 price)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnBuyBankSlot(player, slot, price);
     }
 }
@@ -662,9 +609,8 @@ void ModuleMgr::OnBuyBankSlot(Player* player, uint32 slot, uint32 price)
 bool ModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnRespawn(creature, respawnTime))
         {
             overriden = true;
@@ -676,9 +622,8 @@ bool ModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
 
 void ModuleMgr::OnRespawnRequest(Creature* creature)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnRespawnRequest(creature);
     }
 }
@@ -686,9 +631,8 @@ void ModuleMgr::OnRespawnRequest(Creature* creature)
 bool ModuleMgr::OnUse(GameObject* gameObject, Unit* user)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnUse(gameObject, user))
         {
             overriden = true;
@@ -701,9 +645,8 @@ bool ModuleMgr::OnUse(GameObject* gameObject, Unit* user)
 bool ModuleMgr::OnCalculateEffectiveDodgeChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnCalculateEffectiveDodgeChance(unit, attacker, attType, ability, outChance))
         {
             overriden = true;
@@ -716,9 +659,8 @@ bool ModuleMgr::OnCalculateEffectiveDodgeChance(const Unit* unit, const Unit* at
 bool ModuleMgr::OnCalculateEffectiveBlockChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnCalculateEffectiveBlockChance(unit, attacker, attType, ability, outChance))
         {
             overriden = true;
@@ -731,9 +673,8 @@ bool ModuleMgr::OnCalculateEffectiveBlockChance(const Unit* unit, const Unit* at
 bool ModuleMgr::OnCalculateEffectiveParryChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnCalculateEffectiveParryChance(unit, attacker, attType, ability, outChance))
         {
             overriden = true;
@@ -746,9 +687,8 @@ bool ModuleMgr::OnCalculateEffectiveParryChance(const Unit* unit, const Unit* at
 bool ModuleMgr::OnCalculateEffectiveCritChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, float& outChance)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnCalculateEffectiveCritChance(unit, victim, attType, ability, outChance))
         {
             overriden = true;
@@ -761,9 +701,8 @@ bool ModuleMgr::OnCalculateEffectiveCritChance(const Unit* unit, const Unit* vic
 bool ModuleMgr::OnCalculateEffectiveMissChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, const Spell* const* currentSpells, const SpellPartialResistDistribution& spellPartialResistDistribution, float& outChance)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnCalculateEffectiveMissChance(unit, victim, attType, ability, currentSpells, spellPartialResistDistribution, outChance))
         {
             overriden = true;
@@ -776,9 +715,8 @@ bool ModuleMgr::OnCalculateEffectiveMissChance(const Unit* unit, const Unit* vic
 bool ModuleMgr::OnCalculateSpellMissChance(const Unit* unit, const Unit* victim, uint32 schoolMask, const SpellEntry* spell, float& outChance)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnCalculateSpellMissChance(unit, victim, schoolMask, spell, outChance))
         {
             overriden = true;
@@ -791,9 +729,8 @@ bool ModuleMgr::OnCalculateSpellMissChance(const Unit* unit, const Unit* victim,
 bool ModuleMgr::OnGetAttackDistance(const Unit* unit, const Unit* target, float& outDistance)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnGetAttackDistance(unit, target, outDistance))
         {
             overriden = true;
@@ -805,45 +742,40 @@ bool ModuleMgr::OnGetAttackDistance(const Unit* unit, const Unit* target, float&
 
 void ModuleMgr::OnDealDamage(Unit* unit, Unit* victim, uint32 health, uint32 damage)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnDealDamage(unit, victim, health, damage);
     }
 }
 
 void ModuleMgr::OnKill(Unit* unit, Unit* victim)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnKill(unit, victim);
     }
 }
 
 void ModuleMgr::OnDealHeal(Unit* unit, Unit* victim, int32 gain, uint32 addHealth)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnDealHeal(unit, victim, gain, addHealth);
     }
 }
 
 void ModuleMgr::OnHit(Spell* spell, Unit* caster, Unit* victim)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnHit(spell, caster, victim);
     }
 }
 
 void ModuleMgr::OnCast(Spell* spell, Unit* caster, Unit* victim)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnCast(spell, caster, victim);
     }
 }
@@ -851,9 +783,8 @@ void ModuleMgr::OnCast(Spell* spell, Unit* caster, Unit* victim)
 bool ModuleMgr::OnFillLoot(Loot* loot, Player* owner)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnFillLoot(loot, owner))
         {
             overriden = true;
@@ -866,9 +797,8 @@ bool ModuleMgr::OnFillLoot(Loot* loot, Player* owner)
 bool ModuleMgr::OnGenerateMoneyLoot(Loot* loot, uint32& outMoney)
 {
     bool overriden = false;
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->OnGenerateMoneyLoot(loot, outMoney))
         {
             overriden = true;
@@ -880,198 +810,176 @@ bool ModuleMgr::OnGenerateMoneyLoot(Loot* loot, uint32& outMoney)
 
 void ModuleMgr::OnAddItem(Loot* loot, LootItem* lootItem)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnAddItem(loot, lootItem);
     }
 }
 
 void ModuleMgr::OnSendGold(Loot* loot, Player* player, uint32 gold, uint8 lootMethod)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnSendGold(loot, player, gold, lootMethod);
     }
 }
 
 void ModuleMgr::OnHandleLootMasterGive(Loot* loot, Player* target, LootItem* lootItem)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnHandleLootMasterGive(loot, target, lootItem);
     }
 }
 
 void ModuleMgr::OnPlayerRoll(Loot* loot, Player* player, uint32 itemSlot, uint8 rollType)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnPlayerRoll(loot, player, itemSlot, rollType);
     }
 }
 
 void ModuleMgr::OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollType, uint8 rollAmount, uint32 itemSlot, uint8 inventoryResult)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnPlayerWinRoll(loot, player, rollType, rollAmount, itemSlot, inventoryResult);
     }
 }
 
 void ModuleMgr::OnStartBattleGround(BattleGround* battleground)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnStartBattleGround(battleground);
     }
 }
 
 void ModuleMgr::OnEndBattleGround(BattleGround* battleground, uint32 winnerTeam)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnEndBattleGround(battleground, winnerTeam);
     }
 }
 
 void ModuleMgr::OnUpdatePlayerScore(BattleGround* battleground, Player* player, uint8 scoreType, uint32 value)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnUpdatePlayerScore(battleground, player, scoreType, value);
     }
 }
 
 void ModuleMgr::OnLeaveBattleGround(BattleGround* battleground, Player* player)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnLeaveBattleGround(battleground, player);
     }
 }
 
 void ModuleMgr::OnJoinBattleGround(BattleGround* battleground, Player* player)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnJoinBattleGround(battleground, player);
     }
 }
 
 void ModuleMgr::OnPickUpFlag(BattleGroundWS* battleground, Player* player, uint32 team)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnPickUpFlag(battleground, player, team);
     }
 }
 
 void ModuleMgr::OnSellItem(AuctionEntry* auctionEntry, Player* player)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnSellItem(auctionEntry, player);
     }
 }
 
 void ModuleMgr::OnSellItem(Player* player, Item* item, uint32 money)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnSellItem(player, item, money);
     }
 }
 
 void ModuleMgr::OnBuyBackItem(Player* player, Item* item, uint32 money)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnBuyBackItem(player, item, money);
     }
 }
 
 void ModuleMgr::OnSummoned(Player* player, const ObjectGuid& summoner)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnSummoned(player, summoner);
     }
 }
 
 void ModuleMgr::OnAreaExplored(Player* player, uint32 areaId)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnAreaExplored(player, areaId);
     }
 }
 
 void ModuleMgr::OnUpdateHonor(Player* player)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnUpdateHonor(player);
     }
 }
 
 void ModuleMgr::OnSendMail(Player* player, const ObjectGuid& receiver, uint32 cost)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnSendMail(player, receiver, cost);
     }
 }
 
 void ModuleMgr::OnAbandonQuest(Player* player, uint32 questId)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnAbandonQuest(player, questId);
     }
 }
 
 void ModuleMgr::OnUpdateBid(AuctionEntry* auctionEntry, Player* player, uint32 newBid)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnUpdateBid(auctionEntry, player, newBid);
     }
 }
 
 void ModuleMgr::OnWriteDump(uint32 playerId, std::string& dump)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         module->OnWriteDump(playerId, dump);
     }
 }
 
 bool ModuleMgr::IsModuleDumpTable(const std::string& dbTableName)
 {
-    for (const auto& pair : modules)
+    for (Module* module : modules)
     {
-        Module* module = pair.second;
         if (module->IsModuleDumpTable(dbTableName))
         {
             return true;
@@ -1106,9 +1014,8 @@ bool ModuleMgr::OnExecuteCommand(ChatHandler* chatHandler, const std::string& cm
         if (!cmdPrefix.empty() && !cmdSuffix.empty())
         {
             WorldSession* session = chatHandler->GetSession();
-            for (const auto& pair : modules)
+            for (Module* module : modules)
             {
-                Module* module = pair.second;
                 const char* moduleCommandPrefix = module->GetChatCommandPrefix();
                 if (moduleCommandPrefix && moduleCommandPrefix == cmdPrefix)
                 {

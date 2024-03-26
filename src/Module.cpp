@@ -6,7 +6,7 @@ Module::Module(const std::string& name)
 : config(nullptr)
 , name(name)
 {
-    sModuleMgr.RegisterModule(this, name);
+    sModuleMgr.RegisterModule(this);
 }
 
 Module::~Module()

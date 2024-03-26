@@ -17,7 +17,7 @@ bool ModuleConfig::Load()
     }
     else
     {
-        sLog.outError(std::string("Failed to open configuration file" + filename).c_str());
+        sLog.outError(std::string("Failed to open configuration file " + filename).c_str());
         return false;
     }
 }

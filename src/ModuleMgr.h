@@ -45,7 +45,7 @@ public:
     ModuleMgr() {}
     ~ModuleMgr();
 
-    void RegisterModule(Module* module, const std::string& name);
+    void RegisterModule(Module* module);
 
     // World Hooks
     void OnWorldPreInitialized();
@@ -161,7 +161,7 @@ public:
     bool OnExecuteCommand(ChatHandler* chatHandler, const std::string& cmd);
 
 private:
-    std::map<std::string, Module*> modules;
+    std::vector<Module*> modules;
 };
 
 #define sModuleMgr MaNGOS::Singleton<ModuleMgr>::Instance()

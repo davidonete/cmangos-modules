@@ -1,5 +1,6 @@
 #include "ModuleMgr.h"
 #include "Modules.h"
+#include "Module.h"
 
 #include "Entities/ObjectGuid.h"
 #include "Entities/Player.h"

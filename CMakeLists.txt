@@ -26,7 +26,7 @@ endforeach()
 # Generate header file that includes all active modules
 set(OUTPUT_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/src/Modules.h)
 file(WRITE ${OUTPUT_HEADER} "// Auto-generated file\n")
-foreach(MODULE_NAME ${ALL_MODULES})
+foreach(MODULE_NAME ${MODULE_NAMES})
   capitalize_first_letter(${MODULE_NAME} CAPITALIZED_MODULE_NAME)
   file(APPEND ${OUTPUT_HEADER} "#include \"${CAPITALIZED_MODULE_NAME}\"Module.h\n")
 endforeach()
@@ -47,7 +47,7 @@ target_link_libraries(${LIBRARY_NAME}
 )
 
 # Include and link all modules
-foreach(MODULE_NAME ${ALL_MODULES})
+foreach(MODULE_NAME ${MODULE_NAMES})
   include_directories(${CMAKE_SOURCE_DIR}/src/modules/${MODULE_NAME}/src/)
   target_link_libraries(${LIBRARY_NAME} ${MODULE_NAME})
 endforeach()

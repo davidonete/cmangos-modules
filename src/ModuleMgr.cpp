@@ -6,6 +6,8 @@
 #include "Entities/Player.h"
 #include "Entities/Unit.h"
 
+INSTANTIATE_SINGLETON_1(CmangosModuleMgr);
+
 CmangosModuleMgr::~CmangosModuleMgr()
 {
     for (CmangosModule* module : modules)

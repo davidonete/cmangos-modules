@@ -3,11 +3,11 @@
 
 #include "Config/Config.h"
 
-class ModuleConfig
+class CmangosModuleConfig
 {
 public:
-    ModuleConfig(const std::string& filename);
-    virtual ~ModuleConfig() {}
+    CmangosModuleConfig(const std::string& filename);
+    virtual ~CmangosModuleConfig() {}
 
     bool Load();
 

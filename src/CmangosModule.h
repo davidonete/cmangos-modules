@@ -14,8 +14,8 @@ class Creature;
 class GameObject;
 class Item;
 class Loot;
-class Module;
-class ModuleConfig;
+class CmangosModule;
+class CmangosModuleConfig;
 class MovementInfo;
 class ObjectGuid;
 class Player;
@@ -46,13 +46,13 @@ struct ModuleChatCommand
     uint32 securityLevel;
 };
 
-class Module
+class CmangosModule
 {
-    friend class ModuleMgr;
+    friend class CmangosModuleMgr;
 
 public:
-    Module(const std::string& name);
-    virtual ~Module();
+    CmangosModule(const std::string& name);
+    virtual ~CmangosModule();
 
     void LoadConfig();
     void Initialize();
@@ -286,12 +286,12 @@ public:
     virtual std::vector<ModuleChatCommand>* GetCommandTable() { return nullptr; }
 
 protected:
-    const ModuleConfig* GetConfigInternal() const { return config; }
-    virtual ModuleConfig* CreateConfig() = 0;
-    virtual const ModuleConfig* GetConfig() const = 0;
+    const CmangosModuleConfig* GetConfigInternal() const { return config; }
+    virtual CmangosModuleConfig* CreateConfig() = 0;
+    virtual const CmangosModuleConfig* GetConfig() const = 0;
 
 private:
-    ModuleConfig* config;
+    CmangosModuleConfig* config;
     std::string name;
 };
 

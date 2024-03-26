@@ -11,11 +11,11 @@
 class BattleGround;
 class BattleGroundWS;
 class ChatHandler;
+class CmangosModule;
 class Creature;
 class GameObject;
 class Item;
 class Loot;
-class Module;
 class MovementInfo;
 class ObjectGuid;
 class Player;
@@ -39,13 +39,13 @@ typedef std::map<uint8, ActionButton> ActionButtonList;
 typedef std::array<uint32, NUM_SPELL_PARTIAL_RESISTS> SpellPartialResistChanceEntry;
 typedef std::vector<SpellPartialResistChanceEntry> SpellPartialResistDistribution;
 
-class ModuleMgr
+class CmangosModuleMgr
 {
 public:
-    ModuleMgr() {}
-    ~ModuleMgr();
+    CmangosModuleMgr() {}
+    ~CmangosModuleMgr();
 
-    void RegisterModule(Module* module);
+    void RegisterModule(CmangosModule* module);
 
     // World Hooks
     void OnWorldPreInitialized();
@@ -161,8 +161,8 @@ public:
     bool OnExecuteCommand(ChatHandler* chatHandler, const std::string& cmd);
 
 private:
-    std::vector<Module*> modules;
+    std::vector<CmangosModule*> modules;
 };
 
-#define sModuleMgr MaNGOS::Singleton<ModuleMgr>::Instance()
+#define sModuleMgr MaNGOS::Singleton<CmangosModuleMgr>::Instance()
 #endif

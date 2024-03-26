@@ -1,27 +1,27 @@
-#include "Module.h"
+#include "CmangosModule.h"
 #include "ModuleMgr.h"
-#include "ModuleConfig.h"
+#include "CmangosModuleConfig.h"
 
-Module::Module(const std::string& name)
+CmangosModule::CmangosModule(const std::string& name)
 : config(nullptr)
 , name(name)
 {
     sModuleMgr.RegisterModule(this);
 }
 
-Module::~Module()
+CmangosModule::~CmangosModule()
 {
     delete config;
     config = nullptr;
 }
 
-void Module::LoadConfig()
+void CmangosModule::LoadConfig()
 {
     config = CreateConfig();
     config->Load();
 }
 
-void Module::Initialize()
+void CmangosModule::Initialize()
 {
     sLog.outString("Initializing %s module", name.c_str());
     OnInitialize();

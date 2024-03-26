@@ -1,15 +1,15 @@
-#include "ModuleConfig.h"
+#include "CmangosModuleConfig.h"
 
 #include "Log/Log.h"
 #include "SystemConfig.h"
 
-ModuleConfig::ModuleConfig(const std::string& filename)
+CmangosModuleConfig::CmangosModuleConfig(const std::string& filename)
 : filename(filename)
 {
 
 }
 
-bool ModuleConfig::Load()
+bool CmangosModuleConfig::Load()
 {
     if (config.SetSource(SYSCONFDIR + filename, ""))
     {

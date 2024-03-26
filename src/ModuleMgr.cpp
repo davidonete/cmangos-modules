@@ -1,6 +1,6 @@
 #include "ModuleMgr.h"
 #include "Modules.h"
-#include "Module.h"
+#include "CmangosModule.h"
 
 #include "Entities/ObjectGuid.h"
 #include "Entities/Player.h"
@@ -8,7 +8,7 @@
 
 CmangosModuleMgr::~CmangosModuleMgr()
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         delete module;
         module = nullptr;
@@ -17,7 +17,7 @@ CmangosModuleMgr::~CmangosModuleMgr()
     modules.clear();
 }
 
-void CmangosModuleMgr::RegisterModule(Module* module)
+void CmangosModuleMgr::RegisterModule(CmangosModule* module)
 {
     modules.push_back(module);
 }
@@ -26,7 +26,7 @@ void CmangosModuleMgr::OnWorldPreInitialized()
 {
     AddModules();
 
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->LoadConfig();
         module->OnWorldPreInitialized();
@@ -35,7 +35,7 @@ void CmangosModuleMgr::OnWorldPreInitialized()
 
 void CmangosModuleMgr::OnWorldInitialized()
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->Initialize();
         module->OnWorldInitialized();
@@ -44,7 +44,7 @@ void CmangosModuleMgr::OnWorldInitialized()
 
 void CmangosModuleMgr::OnWorldUpdated(uint32 elapsed)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnUpdate(elapsed);
         module->OnWorldUpdated(elapsed);
@@ -54,7 +54,7 @@ void CmangosModuleMgr::OnWorldUpdated(uint32 elapsed)
 bool CmangosModuleMgr::OnUseItem(Player* player, Item* item)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnUseItem(player, item))
         {
@@ -75,7 +75,7 @@ bool CmangosModuleMgr::OnPreGossipHello(Player* player, const ObjectGuid& guid)
             Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
             if (creature)
             {
-                for (Module* module : modules)
+                for (CmangosModule* module : modules)
                 {
                     if (module->OnPreGossipHello(player, creature))
                     {
@@ -89,7 +89,7 @@ bool CmangosModuleMgr::OnPreGossipHello(Player* player, const ObjectGuid& guid)
             GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
             if (gameObject)
             {
-                for (Module* module : modules)
+                for (CmangosModule* module : modules)
                 {
                     if (module->OnPreGossipHello(player, gameObject))
                     {
@@ -112,7 +112,7 @@ void CmangosModuleMgr::OnGossipHello(Player* player, const ObjectGuid& guid)
             Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
             if (creature)
             {
-                for (Module* module : modules)
+                for (CmangosModule* module : modules)
                 {
                     module->OnGossipHello(player, creature);
                 }
@@ -123,7 +123,7 @@ void CmangosModuleMgr::OnGossipHello(Player* player, const ObjectGuid& guid)
             GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
             if (gameObject)
             {
-                for (Module* module : modules)
+                for (CmangosModule* module : modules)
                 {
                     module->OnGossipHello(player, gameObject);
                 }
@@ -142,7 +142,7 @@ bool CmangosModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, ui
             Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
             if (creature)
             {
-                for (Module* module : modules)
+                for (CmangosModule* module : modules)
                 {
                     if (module->OnGossipSelect(player, creature, sender, action, code, gossipListId))
                     {
@@ -156,7 +156,7 @@ bool CmangosModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, ui
             GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
             if (gameObject)
             {
-                for (Module* module : modules)
+                for (CmangosModule* module : modules)
                 {
                     if (module->OnGossipSelect(player, gameObject, sender, action, code, gossipListId))
                     {
@@ -170,7 +170,7 @@ bool CmangosModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, ui
             Item* item = player->GetItemByGuid(guid);
             if (item)
             {
-                for (Module* module : modules)
+                for (CmangosModule* module : modules)
                 {
                     if (module->OnGossipSelect(player, item, sender, action, code, gossipListId))
                     {
@@ -186,7 +186,7 @@ bool CmangosModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, ui
 
 void CmangosModuleMgr::OnLearnTalent(Player* player, uint32 spellId)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnLearnTalent(player, spellId);
     }
@@ -194,7 +194,7 @@ void CmangosModuleMgr::OnLearnTalent(Player* player, uint32 spellId)
 
 void CmangosModuleMgr::OnResetTalents(Player* player, uint32 cost)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnResetTalents(player, cost);
     }
@@ -205,7 +205,7 @@ void CmangosModuleMgr::OnPreLoadFromDB(Player* player)
     if (player)
     {
         const uint32 playerId = player->GetObjectGuid().GetCounter();
-        for (Module* module : modules)
+        for (CmangosModule* module : modules)
         {
             module->OnPreLoadFromDB(player);
             module->OnPreLoadFromDB(playerId);
@@ -216,7 +216,7 @@ void CmangosModuleMgr::OnPreLoadFromDB(Player* player)
 
 void CmangosModuleMgr::OnLoadFromDB(Player* player)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnLoadFromDB(player);
     }
@@ -224,7 +224,7 @@ void CmangosModuleMgr::OnLoadFromDB(Player* player)
 
 void CmangosModuleMgr::OnSaveToDB(Player* player)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnSaveToDB(player);
     }
@@ -232,7 +232,7 @@ void CmangosModuleMgr::OnSaveToDB(Player* player)
 
 void CmangosModuleMgr::OnDeleteFromDB(uint32 playerId)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnDeleteFromDB(playerId);
     }
@@ -240,7 +240,7 @@ void CmangosModuleMgr::OnDeleteFromDB(uint32 playerId)
 
 void CmangosModuleMgr::OnLogOut(Player* player)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnLogOut(player);
     }
@@ -248,7 +248,7 @@ void CmangosModuleMgr::OnLogOut(Player* player)
 
 void CmangosModuleMgr::OnPreCharacterCreated(Player* player)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnPreCharacterCreated(player);
     }
@@ -256,7 +256,7 @@ void CmangosModuleMgr::OnPreCharacterCreated(Player* player)
 
 void CmangosModuleMgr::OnCharacterCreated(Player* player)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnCharacterCreated(player);
     }
@@ -265,7 +265,7 @@ void CmangosModuleMgr::OnCharacterCreated(Player* player)
 bool CmangosModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList& actionButtons)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnLoadActionButtons(player, actionButtons))
         {
@@ -279,7 +279,7 @@ bool CmangosModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList& act
 bool CmangosModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList(&actionButtons)[2])
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         for (auto& actionButton : actionButtons)
         {
@@ -301,7 +301,7 @@ bool CmangosModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList(&act
 bool CmangosModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList& actionButtons)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnSaveActionButtons(player, actionButtons))
         {
@@ -315,7 +315,7 @@ bool CmangosModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList& act
 bool CmangosModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList(&actionButtons)[2])
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         for (auto& actionButton : actionButtons)
         {
@@ -337,7 +337,7 @@ bool CmangosModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList(&act
 bool CmangosModuleMgr::OnPreHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32& outDamage)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnPreHandleFall(player, movementInfo, lastFallZ, outDamage))
         {
@@ -350,7 +350,7 @@ bool CmangosModuleMgr::OnPreHandleFall(Player* player, const MovementInfo& movem
 
 void CmangosModuleMgr::OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32 damage)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnHandleFall(player, movementInfo, lastFallZ, damage);
     }
@@ -359,7 +359,7 @@ void CmangosModuleMgr::OnHandleFall(Player* player, const MovementInfo& movement
 bool CmangosModuleMgr::OnPreResurrect(Player* player)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnPreResurrect(player))
         {
@@ -372,7 +372,7 @@ bool CmangosModuleMgr::OnPreResurrect(Player* player)
 
 void CmangosModuleMgr::OnResurrect(Player* player)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnResurrect(player);
     }
@@ -380,7 +380,7 @@ void CmangosModuleMgr::OnResurrect(Player* player)
 
 void CmangosModuleMgr::OnReleaseSpirit(Player* player, const WorldSafeLocsEntry* closestGrave)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnReleaseSpirit(player, closestGrave);
     }
@@ -388,7 +388,7 @@ void CmangosModuleMgr::OnReleaseSpirit(Player* player, const WorldSafeLocsEntry*
 
 void CmangosModuleMgr::OnDeath(Player* player, Unit* killer)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnDeath(player, killer);
     }
@@ -396,7 +396,7 @@ void CmangosModuleMgr::OnDeath(Player* player, Unit* killer)
 
 void CmangosModuleMgr::OnDeath(Player* player, uint8 environmentalDamageType)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnDeath(player, environmentalDamageType);
     }
@@ -404,7 +404,7 @@ void CmangosModuleMgr::OnDeath(Player* player, uint8 environmentalDamageType)
 
 void CmangosModuleMgr::OnGiveXP(Player* player, uint32 xp, Creature* victim)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnGiveXP(player, xp, victim);
     }
@@ -412,7 +412,7 @@ void CmangosModuleMgr::OnGiveXP(Player* player, uint32 xp, Creature* victim)
 
 void CmangosModuleMgr::OnGiveLevel(Player* player, uint32 level)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnGiveLevel(player, level);
     }
@@ -420,7 +420,7 @@ void CmangosModuleMgr::OnGiveLevel(Player* player, uint32 level)
 
 void CmangosModuleMgr::OnModifyMoney(Player* player, int32 diff)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnModifyMoney(player, diff);
     }
@@ -428,7 +428,7 @@ void CmangosModuleMgr::OnModifyMoney(Player* player, int32 diff)
 
 void CmangosModuleMgr::OnSetReputation(Player* player, const FactionEntry* factionEntry, int32 standing, bool incremental)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnSetReputation(player, factionEntry, standing, incremental);
     }
@@ -436,7 +436,7 @@ void CmangosModuleMgr::OnSetReputation(Player* player, const FactionEntry* facti
 
 void CmangosModuleMgr::OnRewardQuest(Player* player, const Quest* quest)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnRewardQuest(player, quest);
     }
@@ -444,7 +444,7 @@ void CmangosModuleMgr::OnRewardQuest(Player* player, const Quest* quest)
 
 void CmangosModuleMgr::OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnGetPlayerLevelInfo(player, info);
     }
@@ -452,7 +452,7 @@ void CmangosModuleMgr::OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& inf
 
 void CmangosModuleMgr::OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnSetVisibleItemSlot(player, slot, item);
     }
@@ -460,7 +460,7 @@ void CmangosModuleMgr::OnSetVisibleItemSlot(Player* player, uint8 slot, Item* it
 
 void CmangosModuleMgr::OnMoveItemFromInventory(Player* player, Item* item)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnMoveItemFromInventory(player, item);
     }
@@ -468,7 +468,7 @@ void CmangosModuleMgr::OnMoveItemFromInventory(Player* player, Item* item)
 
 void CmangosModuleMgr::OnMoveItemToInventory(Player* player, Item* item)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnMoveItemToInventory(player, item);
     }
@@ -476,7 +476,7 @@ void CmangosModuleMgr::OnMoveItemToInventory(Player* player, Item* item)
 
 void CmangosModuleMgr::OnStoreItem(Player* player, Loot* loot, Item* item)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnStoreItem(player, loot, item);
     }
@@ -484,7 +484,7 @@ void CmangosModuleMgr::OnStoreItem(Player* player, Loot* loot, Item* item)
 
 void CmangosModuleMgr::OnStoreItem(Player* player, Item* item)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnStoreItem(player, item);
     }
@@ -492,7 +492,7 @@ void CmangosModuleMgr::OnStoreItem(Player* player, Item* item)
 
 void CmangosModuleMgr::OnAddSpell(Player* player, uint32 spellId)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnAddSpell(player, spellId);
     }
@@ -500,7 +500,7 @@ void CmangosModuleMgr::OnAddSpell(Player* player, uint32 spellId)
 
 void CmangosModuleMgr::OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnDuelComplete(player, opponent, duelCompleteType);
     }
@@ -508,7 +508,7 @@ void CmangosModuleMgr::OnDuelComplete(Player* player, Player* opponent, uint8 du
 
 void CmangosModuleMgr::OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnKilledMonsterCredit(player, entry, guid);
     }
@@ -517,7 +517,7 @@ void CmangosModuleMgr::OnKilledMonsterCredit(Player* player, uint32 entry, Objec
 bool CmangosModuleMgr::OnPreRewardPlayerAtKill(Player* player, Unit* victim)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnPreRewardPlayerAtKill(player, victim))
         {
@@ -530,7 +530,7 @@ bool CmangosModuleMgr::OnPreRewardPlayerAtKill(Player* player, Unit* victim)
 
 void CmangosModuleMgr::OnRewardPlayerAtKill(Player* player, Unit* victim)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnRewardPlayerAtKill(player, victim);
     }
@@ -539,7 +539,7 @@ void CmangosModuleMgr::OnRewardPlayerAtKill(Player* player, Unit* victim)
 bool CmangosModuleMgr::OnHandlePageTextQuery(Player* player, const WorldPacket& packet)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnHandlePageTextQuery(player, packet))
         {
@@ -552,7 +552,7 @@ bool CmangosModuleMgr::OnHandlePageTextQuery(Player* player, const WorldPacket& 
 
 void CmangosModuleMgr::OnUpdateSkill(Player* player, uint16 skillId)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnUpdateSkill(player, skillId);
     }
@@ -560,7 +560,7 @@ void CmangosModuleMgr::OnUpdateSkill(Player* player, uint16 skillId)
 
 void CmangosModuleMgr::OnRewardHonor(Player* player, Unit* victim)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnRewardHonor(player, victim);
     }
@@ -568,7 +568,7 @@ void CmangosModuleMgr::OnRewardHonor(Player* player, Unit* victim)
 
 void CmangosModuleMgr::OnEquipItem(Player* player, Item* item)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnEquipItem(player, item);
     }
@@ -576,7 +576,7 @@ void CmangosModuleMgr::OnEquipItem(Player* player, Item* item)
 
 void CmangosModuleMgr::OnTaxiFlightRouteStart(Player* player, const Taxi::Tracker& taxiTracker, bool initial)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnTaxiFlightRouteStart(player, taxiTracker, initial);
     }
@@ -584,7 +584,7 @@ void CmangosModuleMgr::OnTaxiFlightRouteStart(Player* player, const Taxi::Tracke
 
 void CmangosModuleMgr::OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker& taxiTracker, bool final)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnTaxiFlightRouteEnd(player, taxiTracker, final);
     }
@@ -592,7 +592,7 @@ void CmangosModuleMgr::OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker&
 
 void CmangosModuleMgr::OnEmote(Player* player, Unit* target, uint32 emote)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnEmote(player, target, emote);
     }
@@ -600,7 +600,7 @@ void CmangosModuleMgr::OnEmote(Player* player, Unit* target, uint32 emote)
 
 void CmangosModuleMgr::OnBuyBankSlot(Player* player, uint32 slot, uint32 price)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnBuyBankSlot(player, slot, price);
     }
@@ -609,7 +609,7 @@ void CmangosModuleMgr::OnBuyBankSlot(Player* player, uint32 slot, uint32 price)
 bool CmangosModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnRespawn(creature, respawnTime))
         {
@@ -622,7 +622,7 @@ bool CmangosModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
 
 void CmangosModuleMgr::OnRespawnRequest(Creature* creature)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnRespawnRequest(creature);
     }
@@ -631,7 +631,7 @@ void CmangosModuleMgr::OnRespawnRequest(Creature* creature)
 bool CmangosModuleMgr::OnUse(GameObject* gameObject, Unit* user)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnUse(gameObject, user))
         {
@@ -645,7 +645,7 @@ bool CmangosModuleMgr::OnUse(GameObject* gameObject, Unit* user)
 bool CmangosModuleMgr::OnCalculateEffectiveDodgeChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnCalculateEffectiveDodgeChance(unit, attacker, attType, ability, outChance))
         {
@@ -659,7 +659,7 @@ bool CmangosModuleMgr::OnCalculateEffectiveDodgeChance(const Unit* unit, const U
 bool CmangosModuleMgr::OnCalculateEffectiveBlockChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnCalculateEffectiveBlockChance(unit, attacker, attType, ability, outChance))
         {
@@ -673,7 +673,7 @@ bool CmangosModuleMgr::OnCalculateEffectiveBlockChance(const Unit* unit, const U
 bool CmangosModuleMgr::OnCalculateEffectiveParryChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnCalculateEffectiveParryChance(unit, attacker, attType, ability, outChance))
         {
@@ -687,7 +687,7 @@ bool CmangosModuleMgr::OnCalculateEffectiveParryChance(const Unit* unit, const U
 bool CmangosModuleMgr::OnCalculateEffectiveCritChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, float& outChance)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnCalculateEffectiveCritChance(unit, victim, attType, ability, outChance))
         {
@@ -701,7 +701,7 @@ bool CmangosModuleMgr::OnCalculateEffectiveCritChance(const Unit* unit, const Un
 bool CmangosModuleMgr::OnCalculateEffectiveMissChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, const Spell* const* currentSpells, const SpellPartialResistDistribution& spellPartialResistDistribution, float& outChance)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnCalculateEffectiveMissChance(unit, victim, attType, ability, currentSpells, spellPartialResistDistribution, outChance))
         {
@@ -715,7 +715,7 @@ bool CmangosModuleMgr::OnCalculateEffectiveMissChance(const Unit* unit, const Un
 bool CmangosModuleMgr::OnCalculateSpellMissChance(const Unit* unit, const Unit* victim, uint32 schoolMask, const SpellEntry* spell, float& outChance)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnCalculateSpellMissChance(unit, victim, schoolMask, spell, outChance))
         {
@@ -729,7 +729,7 @@ bool CmangosModuleMgr::OnCalculateSpellMissChance(const Unit* unit, const Unit* 
 bool CmangosModuleMgr::OnGetAttackDistance(const Unit* unit, const Unit* target, float& outDistance)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnGetAttackDistance(unit, target, outDistance))
         {
@@ -742,7 +742,7 @@ bool CmangosModuleMgr::OnGetAttackDistance(const Unit* unit, const Unit* target,
 
 void CmangosModuleMgr::OnDealDamage(Unit* unit, Unit* victim, uint32 health, uint32 damage)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnDealDamage(unit, victim, health, damage);
     }
@@ -750,7 +750,7 @@ void CmangosModuleMgr::OnDealDamage(Unit* unit, Unit* victim, uint32 health, uin
 
 void CmangosModuleMgr::OnKill(Unit* unit, Unit* victim)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnKill(unit, victim);
     }
@@ -758,7 +758,7 @@ void CmangosModuleMgr::OnKill(Unit* unit, Unit* victim)
 
 void CmangosModuleMgr::OnDealHeal(Unit* unit, Unit* victim, int32 gain, uint32 addHealth)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnDealHeal(unit, victim, gain, addHealth);
     }
@@ -766,7 +766,7 @@ void CmangosModuleMgr::OnDealHeal(Unit* unit, Unit* victim, int32 gain, uint32 a
 
 void CmangosModuleMgr::OnHit(Spell* spell, Unit* caster, Unit* victim)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnHit(spell, caster, victim);
     }
@@ -774,7 +774,7 @@ void CmangosModuleMgr::OnHit(Spell* spell, Unit* caster, Unit* victim)
 
 void CmangosModuleMgr::OnCast(Spell* spell, Unit* caster, Unit* victim)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnCast(spell, caster, victim);
     }
@@ -783,7 +783,7 @@ void CmangosModuleMgr::OnCast(Spell* spell, Unit* caster, Unit* victim)
 bool CmangosModuleMgr::OnFillLoot(Loot* loot, Player* owner)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnFillLoot(loot, owner))
         {
@@ -797,7 +797,7 @@ bool CmangosModuleMgr::OnFillLoot(Loot* loot, Player* owner)
 bool CmangosModuleMgr::OnGenerateMoneyLoot(Loot* loot, uint32& outMoney)
 {
     bool overriden = false;
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->OnGenerateMoneyLoot(loot, outMoney))
         {
@@ -810,7 +810,7 @@ bool CmangosModuleMgr::OnGenerateMoneyLoot(Loot* loot, uint32& outMoney)
 
 void CmangosModuleMgr::OnAddItem(Loot* loot, LootItem* lootItem)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnAddItem(loot, lootItem);
     }
@@ -818,7 +818,7 @@ void CmangosModuleMgr::OnAddItem(Loot* loot, LootItem* lootItem)
 
 void CmangosModuleMgr::OnSendGold(Loot* loot, Player* player, uint32 gold, uint8 lootMethod)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnSendGold(loot, player, gold, lootMethod);
     }
@@ -826,7 +826,7 @@ void CmangosModuleMgr::OnSendGold(Loot* loot, Player* player, uint32 gold, uint8
 
 void CmangosModuleMgr::OnHandleLootMasterGive(Loot* loot, Player* target, LootItem* lootItem)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnHandleLootMasterGive(loot, target, lootItem);
     }
@@ -834,7 +834,7 @@ void CmangosModuleMgr::OnHandleLootMasterGive(Loot* loot, Player* target, LootIt
 
 void CmangosModuleMgr::OnPlayerRoll(Loot* loot, Player* player, uint32 itemSlot, uint8 rollType)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnPlayerRoll(loot, player, itemSlot, rollType);
     }
@@ -842,7 +842,7 @@ void CmangosModuleMgr::OnPlayerRoll(Loot* loot, Player* player, uint32 itemSlot,
 
 void CmangosModuleMgr::OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollType, uint8 rollAmount, uint32 itemSlot, uint8 inventoryResult)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnPlayerWinRoll(loot, player, rollType, rollAmount, itemSlot, inventoryResult);
     }
@@ -850,7 +850,7 @@ void CmangosModuleMgr::OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollTyp
 
 void CmangosModuleMgr::OnStartBattleGround(BattleGround* battleground)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnStartBattleGround(battleground);
     }
@@ -858,7 +858,7 @@ void CmangosModuleMgr::OnStartBattleGround(BattleGround* battleground)
 
 void CmangosModuleMgr::OnEndBattleGround(BattleGround* battleground, uint32 winnerTeam)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnEndBattleGround(battleground, winnerTeam);
     }
@@ -866,7 +866,7 @@ void CmangosModuleMgr::OnEndBattleGround(BattleGround* battleground, uint32 winn
 
 void CmangosModuleMgr::OnUpdatePlayerScore(BattleGround* battleground, Player* player, uint8 scoreType, uint32 value)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnUpdatePlayerScore(battleground, player, scoreType, value);
     }
@@ -874,7 +874,7 @@ void CmangosModuleMgr::OnUpdatePlayerScore(BattleGround* battleground, Player* p
 
 void CmangosModuleMgr::OnLeaveBattleGround(BattleGround* battleground, Player* player)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnLeaveBattleGround(battleground, player);
     }
@@ -882,7 +882,7 @@ void CmangosModuleMgr::OnLeaveBattleGround(BattleGround* battleground, Player* p
 
 void CmangosModuleMgr::OnJoinBattleGround(BattleGround* battleground, Player* player)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnJoinBattleGround(battleground, player);
     }
@@ -890,7 +890,7 @@ void CmangosModuleMgr::OnJoinBattleGround(BattleGround* battleground, Player* pl
 
 void CmangosModuleMgr::OnPickUpFlag(BattleGroundWS* battleground, Player* player, uint32 team)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnPickUpFlag(battleground, player, team);
     }
@@ -898,7 +898,7 @@ void CmangosModuleMgr::OnPickUpFlag(BattleGroundWS* battleground, Player* player
 
 void CmangosModuleMgr::OnSellItem(AuctionEntry* auctionEntry, Player* player)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnSellItem(auctionEntry, player);
     }
@@ -906,7 +906,7 @@ void CmangosModuleMgr::OnSellItem(AuctionEntry* auctionEntry, Player* player)
 
 void CmangosModuleMgr::OnSellItem(Player* player, Item* item, uint32 money)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnSellItem(player, item, money);
     }
@@ -914,7 +914,7 @@ void CmangosModuleMgr::OnSellItem(Player* player, Item* item, uint32 money)
 
 void CmangosModuleMgr::OnBuyBackItem(Player* player, Item* item, uint32 money)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnBuyBackItem(player, item, money);
     }
@@ -922,7 +922,7 @@ void CmangosModuleMgr::OnBuyBackItem(Player* player, Item* item, uint32 money)
 
 void CmangosModuleMgr::OnSummoned(Player* player, const ObjectGuid& summoner)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnSummoned(player, summoner);
     }
@@ -930,7 +930,7 @@ void CmangosModuleMgr::OnSummoned(Player* player, const ObjectGuid& summoner)
 
 void CmangosModuleMgr::OnAreaExplored(Player* player, uint32 areaId)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnAreaExplored(player, areaId);
     }
@@ -938,7 +938,7 @@ void CmangosModuleMgr::OnAreaExplored(Player* player, uint32 areaId)
 
 void CmangosModuleMgr::OnUpdateHonor(Player* player)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnUpdateHonor(player);
     }
@@ -946,7 +946,7 @@ void CmangosModuleMgr::OnUpdateHonor(Player* player)
 
 void CmangosModuleMgr::OnSendMail(Player* player, const ObjectGuid& receiver, uint32 cost)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnSendMail(player, receiver, cost);
     }
@@ -954,7 +954,7 @@ void CmangosModuleMgr::OnSendMail(Player* player, const ObjectGuid& receiver, ui
 
 void CmangosModuleMgr::OnAbandonQuest(Player* player, uint32 questId)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnAbandonQuest(player, questId);
     }
@@ -962,7 +962,7 @@ void CmangosModuleMgr::OnAbandonQuest(Player* player, uint32 questId)
 
 void CmangosModuleMgr::OnUpdateBid(AuctionEntry* auctionEntry, Player* player, uint32 newBid)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnUpdateBid(auctionEntry, player, newBid);
     }
@@ -970,7 +970,7 @@ void CmangosModuleMgr::OnUpdateBid(AuctionEntry* auctionEntry, Player* player, u
 
 void CmangosModuleMgr::OnWriteDump(uint32 playerId, std::string& dump)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         module->OnWriteDump(playerId, dump);
     }
@@ -978,7 +978,7 @@ void CmangosModuleMgr::OnWriteDump(uint32 playerId, std::string& dump)
 
 bool CmangosModuleMgr::IsModuleDumpTable(const std::string& dbTableName)
 {
-    for (Module* module : modules)
+    for (CmangosModule* module : modules)
     {
         if (module->IsModuleDumpTable(dbTableName))
         {
@@ -1014,7 +1014,7 @@ bool CmangosModuleMgr::OnExecuteCommand(ChatHandler* chatHandler, const std::str
         if (!cmdPrefix.empty() && !cmdSuffix.empty())
         {
             WorldSession* session = chatHandler->GetSession();
-            for (Module* module : modules)
+            for (CmangosModule* module : modules)
             {
                 const char* moduleCommandPrefix = module->GetChatCommandPrefix();
                 if (moduleCommandPrefix && moduleCommandPrefix == cmdPrefix)

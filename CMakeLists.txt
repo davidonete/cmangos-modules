@@ -28,7 +28,7 @@ set(OUTPUT_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/src/Modules.h)
 file(WRITE ${OUTPUT_HEADER} "// Auto-generated file\n")
 foreach(MODULE_NAME ${MODULE_NAMES})
   capitalize_first_letter(${MODULE_NAME} CAPITALIZED_MODULE_NAME)
-  file(APPEND ${OUTPUT_HEADER} "#include \"${CAPITALIZED_MODULE_NAME}\"Module.h\n")
+  file(APPEND ${OUTPUT_HEADER} "#include \"${CAPITALIZED_MODULE_NAME}Module.h\"\n")
 endforeach()
 
 # Base files

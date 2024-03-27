@@ -6,9 +6,9 @@
 #include "Entities/Player.h"
 #include "Entities/Unit.h"
 
-INSTANTIATE_SINGLETON_1(cmangos_modules::ModuleMgr);
+INSTANTIATE_SINGLETON_1(cmangos_module::ModuleMgr);
 
-namespace cmangos_modules
+namespace cmangos_module
 {
     ModuleMgr::~ModuleMgr()
     {

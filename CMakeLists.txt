@@ -35,7 +35,7 @@ file(APPEND ${OUTPUT_FILE} "void AddModules()\n")
 file(APPEND ${OUTPUT_FILE} "{\n")
 foreach(MODULE_NAME ${MODULE_NAMES})
   capitalize_first_letter(${MODULE_NAME} CAPITALIZED_MODULE_NAME)
-  file(APPEND ${OUTPUT_FILE} "    new ${MODULE_NAME}_module::${CAPITALIZED_MODULE_NAME}Module();\n")
+  file(APPEND ${OUTPUT_FILE} "    new cmangos_module::${CAPITALIZED_MODULE_NAME}Module();\n")
 endforeach()
 file(APPEND ${OUTPUT_FILE} "}\n")
 

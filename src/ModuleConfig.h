@@ -3,7 +3,7 @@
 
 #include "Config/Config.h"
 
-namespace cmangos_modules
+namespace cmangos_module
 {
     class ModuleConfig
     {

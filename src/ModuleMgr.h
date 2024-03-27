@@ -38,7 +38,7 @@ typedef std::map<uint8, ActionButton> ActionButtonList;
 typedef std::array<uint32, NUM_SPELL_PARTIAL_RESISTS> SpellPartialResistChanceEntry;
 typedef std::vector<SpellPartialResistChanceEntry> SpellPartialResistDistribution;
 
-namespace cmangos_modules
+namespace cmangos_module
 {
     class Module;
 
@@ -168,5 +168,5 @@ namespace cmangos_modules
     };
 }
 
-#define sModuleMgr MaNGOS::Singleton<cmangos_modules::ModuleMgr>::Instance()
+#define sModuleMgr MaNGOS::Singleton<cmangos_module::ModuleMgr>::Instance()
 #endif

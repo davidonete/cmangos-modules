@@ -3,7 +3,7 @@
 #include "Log/Log.h"
 #include "SystemConfig.h"
 
-namespace cmangos_modules
+namespace cmangos_module
 {
     ModuleConfig::ModuleConfig(const std::string& filename)
         : filename(filename)

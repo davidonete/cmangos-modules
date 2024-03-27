@@ -39,6 +39,14 @@ typedef std::vector<SpellPartialResistChanceEntry> SpellPartialResistDistributio
 
 namespace cmangos_module
 {
+    namespace helper
+    {
+        std::string FormatString(const char* format, ...);
+        bool IsMaxLevel(Player* player);
+        bool IsAlliance(uint8 race);
+        bool IsAlliance(Player* player);
+    }
+
     class ModuleConfig;
 
     struct ModuleChatCommand

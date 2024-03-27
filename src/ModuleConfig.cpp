@@ -6,7 +6,7 @@
 namespace cmangos_module
 {
     ModuleConfig::ModuleConfig(const std::string& filename)
-        : filename(filename)
+    : filename(filename)
     {
 
     }

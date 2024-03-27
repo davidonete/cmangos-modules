@@ -53,7 +53,7 @@ namespace cmangos_module
         friend class ModuleMgr;
 
     public:
-        Module(const std::string& name);
+        Module(const std::string& name, ModuleConfig* config);
         virtual ~Module();
 
         void LoadConfig();
@@ -288,9 +288,7 @@ namespace cmangos_module
         virtual std::vector<ModuleChatCommand>* GetCommandTable() { return nullptr; }
 
     protected:
-        const ModuleConfig* GetConfigInternal() const { return config; }
-        virtual ModuleConfig* CreateConfig() = 0;
-        virtual const ModuleConfig* GetConfig() const = 0;
+        virtual const ModuleConfig* GetConfig() const { return config; }
 
     private:
         ModuleConfig* config;

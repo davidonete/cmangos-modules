@@ -1,1041 +1,1044 @@
 #include "ModuleMgr.h"
 #include "Modules.h"
-#include "CmangosModule.h"
+#include "Module.h"
 
 #include "Entities/ObjectGuid.h"
 #include "Entities/Player.h"
 #include "Entities/Unit.h"
 
-INSTANTIATE_SINGLETON_1(CmangosModuleMgr);
+INSTANTIATE_SINGLETON_1(cmangos_modules::ModuleMgr);
 
-CmangosModuleMgr::~CmangosModuleMgr()
+namespace cmangos_modules
 {
-    for (CmangosModule* module : modules)
+    ModuleMgr::~ModuleMgr()
     {
-        delete module;
-        module = nullptr;
-    }
-
-    modules.clear();
-}
-
-void CmangosModuleMgr::RegisterModule(CmangosModule* module)
-{
-    modules.push_back(module);
-}
-
-void CmangosModuleMgr::OnWorldPreInitialized()
-{
-    AddModules();
-
-    for (CmangosModule* module : modules)
-    {
-        module->LoadConfig();
-        module->OnWorldPreInitialized();
-    }
-}
-
-void CmangosModuleMgr::OnWorldInitialized()
-{
-    for (CmangosModule* module : modules)
-    {
-        module->Initialize();
-        module->OnWorldInitialized();
-    }
-}
-
-void CmangosModuleMgr::OnWorldUpdated(uint32 elapsed)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnUpdate(elapsed);
-        module->OnWorldUpdated(elapsed);
-    }
-}
-
-bool CmangosModuleMgr::OnUseItem(Player* player, Item* item)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
-    {
-        if (module->OnUseItem(player, item))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            delete mod;
+            mod = nullptr;
+        }
+
+        modules.clear();
+    }
+
+    void ModuleMgr::RegisterModule(Module* mod)
+    {
+        modules.push_back(mod);
+    }
+
+    void ModuleMgr::OnWorldPreInitialized()
+    {
+        AddModules();
+
+        for (Module* mod : modules)
+        {
+            mod->LoadConfig();
+            mod->OnWorldPreInitialized();
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnPreGossipHello(Player* player, const ObjectGuid& guid)
-{
-    bool overriden = false;
-    if (player)
+    void ModuleMgr::OnWorldInitialized()
     {
-        if (guid.IsAnyTypeCreature())
+        for (Module* mod : modules)
         {
-            Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
-            if (creature)
-            {
-                for (CmangosModule* module : modules)
-                {
-                    if (module->OnPreGossipHello(player, creature))
-                    {
-                        overriden = true;
-                    }
-                }
-            }
-        }
-        else if (guid.IsGameObject())
-        {
-            GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
-            if (gameObject)
-            {
-                for (CmangosModule* module : modules)
-                {
-                    if (module->OnPreGossipHello(player, gameObject))
-                    {
-                        overriden = true;
-                    }
-                }
-            }
+            mod->Initialize();
+            mod->OnWorldInitialized();
         }
     }
 
-    return overriden;
-}
-
-void CmangosModuleMgr::OnGossipHello(Player* player, const ObjectGuid& guid)
-{
-    if (player)
+    void ModuleMgr::OnWorldUpdated(uint32 elapsed)
     {
-        if (guid.IsAnyTypeCreature())
+        for (Module* mod : modules)
         {
-            Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
-            if (creature)
-            {
-                for (CmangosModule* module : modules)
-                {
-                    module->OnGossipHello(player, creature);
-                }
-            }
-        }
-        else if (guid.IsGameObject())
-        {
-            GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
-            if (gameObject)
-            {
-                for (CmangosModule* module : modules)
-                {
-                    module->OnGossipHello(player, gameObject);
-                }
-            }
-        }
-    }
-}
-
-bool CmangosModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId)
-{
-    bool overriden = false;
-    if (player)
-    {
-        if (guid.IsAnyTypeCreature())
-        {
-            Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
-            if (creature)
-            {
-                for (CmangosModule* module : modules)
-                {
-                    if (module->OnGossipSelect(player, creature, sender, action, code, gossipListId))
-                    {
-                        overriden = true;
-                    }
-                }
-            }
-        }
-        else if (guid.IsGameObject())
-        {
-            GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
-            if (gameObject)
-            {
-                for (CmangosModule* module : modules)
-                {
-                    if (module->OnGossipSelect(player, gameObject, sender, action, code, gossipListId))
-                    {
-                        overriden = true;
-                    }
-                }
-            }
-        }
-        else if (guid.IsItem())
-        {
-            Item* item = player->GetItemByGuid(guid);
-            if (item)
-            {
-                for (CmangosModule* module : modules)
-                {
-                    if (module->OnGossipSelect(player, item, sender, action, code, gossipListId))
-                    {
-                        overriden = true;
-                    }
-                }
-            }
+            mod->OnUpdate(elapsed);
+            mod->OnWorldUpdated(elapsed);
         }
     }
 
-    return overriden;
-}
-
-void CmangosModuleMgr::OnLearnTalent(Player* player, uint32 spellId)
-{
-    for (CmangosModule* module : modules)
+    bool ModuleMgr::OnUseItem(Player* player, Item* item)
     {
-        module->OnLearnTalent(player, spellId);
-    }
-}
-
-void CmangosModuleMgr::OnResetTalents(Player* player, uint32 cost)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnResetTalents(player, cost);
-    }
-}
-
-void CmangosModuleMgr::OnPreLoadFromDB(Player* player)
-{
-    if (player)
-    {
-        const uint32 playerId = player->GetObjectGuid().GetCounter();
-        for (CmangosModule* module : modules)
+        bool overriden = false;
+        for (Module* mod : modules)
         {
-            module->OnPreLoadFromDB(player);
-            module->OnPreLoadFromDB(playerId);
-        }
-    }
-
-}
-
-void CmangosModuleMgr::OnLoadFromDB(Player* player)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnLoadFromDB(player);
-    }
-}
-
-void CmangosModuleMgr::OnSaveToDB(Player* player)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnSaveToDB(player);
-    }
-}
-
-void CmangosModuleMgr::OnDeleteFromDB(uint32 playerId)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnDeleteFromDB(playerId);
-    }
-}
-
-void CmangosModuleMgr::OnLogOut(Player* player)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnLogOut(player);
-    }
-}
-
-void CmangosModuleMgr::OnPreCharacterCreated(Player* player)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnPreCharacterCreated(player);
-    }
-}
-
-void CmangosModuleMgr::OnCharacterCreated(Player* player)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnCharacterCreated(player);
-    }
-}
-
-bool CmangosModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList& actionButtons)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
-    {
-        if (module->OnLoadActionButtons(player, actionButtons))
-        {
-            overriden = true;
-        }
-    }
-
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList(&actionButtons)[2])
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
-    {
-        for (auto& actionButton : actionButtons)
-        {
-            if (module->OnLoadActionButtons(player, actionButton))
+            if (mod->OnUseItem(player, item))
             {
                 overriden = true;
             }
         }
 
-        if (overriden)
+        return overriden;
+    }
+
+    bool ModuleMgr::OnPreGossipHello(Player* player, const ObjectGuid& guid)
+    {
+        bool overriden = false;
+        if (player)
         {
-            break;
+            if (guid.IsAnyTypeCreature())
+            {
+                Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
+                if (creature)
+                {
+                    for (Module* mod : modules)
+                    {
+                        if (mod->OnPreGossipHello(player, creature))
+                        {
+                            overriden = true;
+                        }
+                    }
+                }
+            }
+            else if (guid.IsGameObject())
+            {
+                GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
+                if (gameObject)
+                {
+                    for (Module* mod : modules)
+                    {
+                        if (mod->OnPreGossipHello(player, gameObject))
+                        {
+                            overriden = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return overriden;
+    }
+
+    void ModuleMgr::OnGossipHello(Player* player, const ObjectGuid& guid)
+    {
+        if (player)
+        {
+            if (guid.IsAnyTypeCreature())
+            {
+                Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
+                if (creature)
+                {
+                    for (Module* mod : modules)
+                    {
+                        mod->OnGossipHello(player, creature);
+                    }
+                }
+            }
+            else if (guid.IsGameObject())
+            {
+                GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
+                if (gameObject)
+                {
+                    for (Module* mod : modules)
+                    {
+                        mod->OnGossipHello(player, gameObject);
+                    }
+                }
+            }
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList& actionButtons)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
+    bool ModuleMgr::OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId)
     {
-        if (module->OnSaveActionButtons(player, actionButtons))
+        bool overriden = false;
+        if (player)
         {
-            overriden = true;
+            if (guid.IsAnyTypeCreature())
+            {
+                Creature* creature = player->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
+                if (creature)
+                {
+                    for (Module* mod : modules)
+                    {
+                        if (mod->OnGossipSelect(player, creature, sender, action, code, gossipListId))
+                        {
+                            overriden = true;
+                        }
+                    }
+                }
+            }
+            else if (guid.IsGameObject())
+            {
+                GameObject* gameObject = player->GetGameObjectIfCanInteractWith(guid);
+                if (gameObject)
+                {
+                    for (Module* mod : modules)
+                    {
+                        if (mod->OnGossipSelect(player, gameObject, sender, action, code, gossipListId))
+                        {
+                            overriden = true;
+                        }
+                    }
+                }
+            }
+            else if (guid.IsItem())
+            {
+                Item* item = player->GetItemByGuid(guid);
+                if (item)
+                {
+                    for (Module* mod : modules)
+                    {
+                        if (mod->OnGossipSelect(player, item, sender, action, code, gossipListId))
+                        {
+                            overriden = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return overriden;
+    }
+
+    void ModuleMgr::OnLearnTalent(Player* player, uint32 spellId)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnLearnTalent(player, spellId);
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList(&actionButtons)[2])
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnResetTalents(Player* player, uint32 cost)
     {
-        for (auto& actionButton : actionButtons)
+        for (Module* mod : modules)
         {
-            if (module->OnSaveActionButtons(player, actionButton))
+            mod->OnResetTalents(player, cost);
+        }
+    }
+
+    void ModuleMgr::OnPreLoadFromDB(Player* player)
+    {
+        if (player)
+        {
+            const uint32 playerId = player->GetObjectGuid().GetCounter();
+            for (Module* mod : modules)
+            {
+                mod->OnPreLoadFromDB(player);
+                mod->OnPreLoadFromDB(playerId);
+            }
+        }
+
+    }
+
+    void ModuleMgr::OnLoadFromDB(Player* player)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnLoadFromDB(player);
+        }
+    }
+
+    void ModuleMgr::OnSaveToDB(Player* player)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnSaveToDB(player);
+        }
+    }
+
+    void ModuleMgr::OnDeleteFromDB(uint32 playerId)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnDeleteFromDB(playerId);
+        }
+    }
+
+    void ModuleMgr::OnLogOut(Player* player)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnLogOut(player);
+        }
+    }
+
+    void ModuleMgr::OnPreCharacterCreated(Player* player)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnPreCharacterCreated(player);
+        }
+    }
+
+    void ModuleMgr::OnCharacterCreated(Player* player)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnCharacterCreated(player);
+        }
+    }
+
+    bool ModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList& actionButtons)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnLoadActionButtons(player, actionButtons))
             {
                 overriden = true;
             }
         }
 
-        if (overriden)
+        return overriden;
+    }
+
+    bool ModuleMgr::OnLoadActionButtons(Player* player, ActionButtonList(&actionButtons)[2])
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
         {
-            break;
+            for (auto& actionButton : actionButtons)
+            {
+                if (mod->OnLoadActionButtons(player, actionButton))
+                {
+                    overriden = true;
+                }
+            }
+
+            if (overriden)
+            {
+                break;
+            }
+        }
+
+        return overriden;
+    }
+
+    bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList& actionButtons)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnSaveActionButtons(player, actionButtons))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    bool ModuleMgr::OnSaveActionButtons(Player* player, ActionButtonList(&actionButtons)[2])
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            for (auto& actionButton : actionButtons)
+            {
+                if (mod->OnSaveActionButtons(player, actionButton))
+                {
+                    overriden = true;
+                }
+            }
+
+            if (overriden)
+            {
+                break;
+            }
+        }
+
+        return overriden;
+    }
+
+    bool ModuleMgr::OnPreHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32& outDamage)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnPreHandleFall(player, movementInfo, lastFallZ, outDamage))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    void ModuleMgr::OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32 damage)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnHandleFall(player, movementInfo, lastFallZ, damage);
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnPreHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32& outDamage)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
+    bool ModuleMgr::OnPreResurrect(Player* player)
     {
-        if (module->OnPreHandleFall(player, movementInfo, lastFallZ, outDamage))
+        bool overriden = false;
+        for (Module* mod : modules)
         {
-            overriden = true;
+            if (mod->OnPreResurrect(player))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    void ModuleMgr::OnResurrect(Player* player)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnResurrect(player);
         }
     }
 
-    return overriden;
-}
-
-void CmangosModuleMgr::OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32 damage)
-{
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnReleaseSpirit(Player* player, const WorldSafeLocsEntry* closestGrave)
     {
-        module->OnHandleFall(player, movementInfo, lastFallZ, damage);
-    }
-}
-
-bool CmangosModuleMgr::OnPreResurrect(Player* player)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
-    {
-        if (module->OnPreResurrect(player))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnReleaseSpirit(player, closestGrave);
         }
     }
 
-    return overriden;
-}
-
-void CmangosModuleMgr::OnResurrect(Player* player)
-{
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnDeath(Player* player, Unit* killer)
     {
-        module->OnResurrect(player);
-    }
-}
-
-void CmangosModuleMgr::OnReleaseSpirit(Player* player, const WorldSafeLocsEntry* closestGrave)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnReleaseSpirit(player, closestGrave);
-    }
-}
-
-void CmangosModuleMgr::OnDeath(Player* player, Unit* killer)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnDeath(player, killer);
-    }
-}
-
-void CmangosModuleMgr::OnDeath(Player* player, uint8 environmentalDamageType)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnDeath(player, environmentalDamageType);
-    }
-}
-
-void CmangosModuleMgr::OnGiveXP(Player* player, uint32 xp, Creature* victim)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnGiveXP(player, xp, victim);
-    }
-}
-
-void CmangosModuleMgr::OnGiveLevel(Player* player, uint32 level)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnGiveLevel(player, level);
-    }
-}
-
-void CmangosModuleMgr::OnModifyMoney(Player* player, int32 diff)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnModifyMoney(player, diff);
-    }
-}
-
-void CmangosModuleMgr::OnSetReputation(Player* player, const FactionEntry* factionEntry, int32 standing, bool incremental)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnSetReputation(player, factionEntry, standing, incremental);
-    }
-}
-
-void CmangosModuleMgr::OnRewardQuest(Player* player, const Quest* quest)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnRewardQuest(player, quest);
-    }
-}
-
-void CmangosModuleMgr::OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnGetPlayerLevelInfo(player, info);
-    }
-}
-
-void CmangosModuleMgr::OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnSetVisibleItemSlot(player, slot, item);
-    }
-}
-
-void CmangosModuleMgr::OnMoveItemFromInventory(Player* player, Item* item)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnMoveItemFromInventory(player, item);
-    }
-}
-
-void CmangosModuleMgr::OnMoveItemToInventory(Player* player, Item* item)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnMoveItemToInventory(player, item);
-    }
-}
-
-void CmangosModuleMgr::OnStoreItem(Player* player, Loot* loot, Item* item)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnStoreItem(player, loot, item);
-    }
-}
-
-void CmangosModuleMgr::OnStoreItem(Player* player, Item* item)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnStoreItem(player, item);
-    }
-}
-
-void CmangosModuleMgr::OnAddSpell(Player* player, uint32 spellId)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnAddSpell(player, spellId);
-    }
-}
-
-void CmangosModuleMgr::OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnDuelComplete(player, opponent, duelCompleteType);
-    }
-}
-
-void CmangosModuleMgr::OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnKilledMonsterCredit(player, entry, guid);
-    }
-}
-
-bool CmangosModuleMgr::OnPreRewardPlayerAtKill(Player* player, Unit* victim)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
-    {
-        if (module->OnPreRewardPlayerAtKill(player, victim))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnDeath(player, killer);
         }
     }
 
-    return overriden;
-}
-
-void CmangosModuleMgr::OnRewardPlayerAtKill(Player* player, Unit* victim)
-{
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnDeath(Player* player, uint8 environmentalDamageType)
     {
-        module->OnRewardPlayerAtKill(player, victim);
-    }
-}
-
-bool CmangosModuleMgr::OnHandlePageTextQuery(Player* player, const WorldPacket& packet)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
-    {
-        if (module->OnHandlePageTextQuery(player, packet))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnDeath(player, environmentalDamageType);
         }
     }
 
-    return overriden;
-}
-
-void CmangosModuleMgr::OnUpdateSkill(Player* player, uint16 skillId)
-{
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnGiveXP(Player* player, uint32 xp, Creature* victim)
     {
-        module->OnUpdateSkill(player, skillId);
-    }
-}
-
-void CmangosModuleMgr::OnRewardHonor(Player* player, Unit* victim)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnRewardHonor(player, victim);
-    }
-}
-
-void CmangosModuleMgr::OnEquipItem(Player* player, Item* item)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnEquipItem(player, item);
-    }
-}
-
-void CmangosModuleMgr::OnTaxiFlightRouteStart(Player* player, const Taxi::Tracker& taxiTracker, bool initial)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnTaxiFlightRouteStart(player, taxiTracker, initial);
-    }
-}
-
-void CmangosModuleMgr::OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker& taxiTracker, bool final)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnTaxiFlightRouteEnd(player, taxiTracker, final);
-    }
-}
-
-void CmangosModuleMgr::OnEmote(Player* player, Unit* target, uint32 emote)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnEmote(player, target, emote);
-    }
-}
-
-void CmangosModuleMgr::OnBuyBankSlot(Player* player, uint32 slot, uint32 price)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnBuyBankSlot(player, slot, price);
-    }
-}
-
-bool CmangosModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
-    {
-        if (module->OnRespawn(creature, respawnTime))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnGiveXP(player, xp, victim);
         }
     }
 
-    return overriden;
-}
-
-void CmangosModuleMgr::OnRespawnRequest(Creature* creature)
-{
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnGiveLevel(Player* player, uint32 level)
     {
-        module->OnRespawnRequest(creature);
-    }
-}
-
-bool CmangosModuleMgr::OnUse(GameObject* gameObject, Unit* user)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
-    {
-        if (module->OnUse(gameObject, user))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnGiveLevel(player, level);
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnCalculateEffectiveDodgeChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnModifyMoney(Player* player, int32 diff)
     {
-        if (module->OnCalculateEffectiveDodgeChance(unit, attacker, attType, ability, outChance))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnModifyMoney(player, diff);
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnCalculateEffectiveBlockChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnSetReputation(Player* player, const FactionEntry* factionEntry, int32 standing, bool incremental)
     {
-        if (module->OnCalculateEffectiveBlockChance(unit, attacker, attType, ability, outChance))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnSetReputation(player, factionEntry, standing, incremental);
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnCalculateEffectiveParryChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnRewardQuest(Player* player, const Quest* quest)
     {
-        if (module->OnCalculateEffectiveParryChance(unit, attacker, attType, ability, outChance))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnRewardQuest(player, quest);
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnCalculateEffectiveCritChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, float& outChance)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info)
     {
-        if (module->OnCalculateEffectiveCritChance(unit, victim, attType, ability, outChance))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnGetPlayerLevelInfo(player, info);
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnCalculateEffectiveMissChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, const Spell* const* currentSpells, const SpellPartialResistDistribution& spellPartialResistDistribution, float& outChance)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item)
     {
-        if (module->OnCalculateEffectiveMissChance(unit, victim, attType, ability, currentSpells, spellPartialResistDistribution, outChance))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnSetVisibleItemSlot(player, slot, item);
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnCalculateSpellMissChance(const Unit* unit, const Unit* victim, uint32 schoolMask, const SpellEntry* spell, float& outChance)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnMoveItemFromInventory(Player* player, Item* item)
     {
-        if (module->OnCalculateSpellMissChance(unit, victim, schoolMask, spell, outChance))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnMoveItemFromInventory(player, item);
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnGetAttackDistance(const Unit* unit, const Unit* target, float& outDistance)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnMoveItemToInventory(Player* player, Item* item)
     {
-        if (module->OnGetAttackDistance(unit, target, outDistance))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnMoveItemToInventory(player, item);
         }
     }
 
-    return overriden;
-}
-
-void CmangosModuleMgr::OnDealDamage(Unit* unit, Unit* victim, uint32 health, uint32 damage)
-{
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnStoreItem(Player* player, Loot* loot, Item* item)
     {
-        module->OnDealDamage(unit, victim, health, damage);
-    }
-}
-
-void CmangosModuleMgr::OnKill(Unit* unit, Unit* victim)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnKill(unit, victim);
-    }
-}
-
-void CmangosModuleMgr::OnDealHeal(Unit* unit, Unit* victim, int32 gain, uint32 addHealth)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnDealHeal(unit, victim, gain, addHealth);
-    }
-}
-
-void CmangosModuleMgr::OnHit(Spell* spell, Unit* caster, Unit* victim)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnHit(spell, caster, victim);
-    }
-}
-
-void CmangosModuleMgr::OnCast(Spell* spell, Unit* caster, Unit* victim)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnCast(spell, caster, victim);
-    }
-}
-
-bool CmangosModuleMgr::OnFillLoot(Loot* loot, Player* owner)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
-    {
-        if (module->OnFillLoot(loot, owner))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnStoreItem(player, loot, item);
         }
     }
 
-    return overriden;
-}
-
-bool CmangosModuleMgr::OnGenerateMoneyLoot(Loot* loot, uint32& outMoney)
-{
-    bool overriden = false;
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnStoreItem(Player* player, Item* item)
     {
-        if (module->OnGenerateMoneyLoot(loot, outMoney))
+        for (Module* mod : modules)
         {
-            overriden = true;
+            mod->OnStoreItem(player, item);
         }
     }
 
-    return overriden;
-}
-
-void CmangosModuleMgr::OnAddItem(Loot* loot, LootItem* lootItem)
-{
-    for (CmangosModule* module : modules)
+    void ModuleMgr::OnAddSpell(Player* player, uint32 spellId)
     {
-        module->OnAddItem(loot, lootItem);
-    }
-}
-
-void CmangosModuleMgr::OnSendGold(Loot* loot, Player* player, uint32 gold, uint8 lootMethod)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnSendGold(loot, player, gold, lootMethod);
-    }
-}
-
-void CmangosModuleMgr::OnHandleLootMasterGive(Loot* loot, Player* target, LootItem* lootItem)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnHandleLootMasterGive(loot, target, lootItem);
-    }
-}
-
-void CmangosModuleMgr::OnPlayerRoll(Loot* loot, Player* player, uint32 itemSlot, uint8 rollType)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnPlayerRoll(loot, player, itemSlot, rollType);
-    }
-}
-
-void CmangosModuleMgr::OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollType, uint8 rollAmount, uint32 itemSlot, uint8 inventoryResult)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnPlayerWinRoll(loot, player, rollType, rollAmount, itemSlot, inventoryResult);
-    }
-}
-
-void CmangosModuleMgr::OnStartBattleGround(BattleGround* battleground)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnStartBattleGround(battleground);
-    }
-}
-
-void CmangosModuleMgr::OnEndBattleGround(BattleGround* battleground, uint32 winnerTeam)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnEndBattleGround(battleground, winnerTeam);
-    }
-}
-
-void CmangosModuleMgr::OnUpdatePlayerScore(BattleGround* battleground, Player* player, uint8 scoreType, uint32 value)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnUpdatePlayerScore(battleground, player, scoreType, value);
-    }
-}
-
-void CmangosModuleMgr::OnLeaveBattleGround(BattleGround* battleground, Player* player)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnLeaveBattleGround(battleground, player);
-    }
-}
-
-void CmangosModuleMgr::OnJoinBattleGround(BattleGround* battleground, Player* player)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnJoinBattleGround(battleground, player);
-    }
-}
-
-void CmangosModuleMgr::OnPickUpFlag(BattleGroundWS* battleground, Player* player, uint32 team)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnPickUpFlag(battleground, player, team);
-    }
-}
-
-void CmangosModuleMgr::OnSellItem(AuctionEntry* auctionEntry, Player* player)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnSellItem(auctionEntry, player);
-    }
-}
-
-void CmangosModuleMgr::OnSellItem(Player* player, Item* item, uint32 money)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnSellItem(player, item, money);
-    }
-}
-
-void CmangosModuleMgr::OnBuyBackItem(Player* player, Item* item, uint32 money)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnBuyBackItem(player, item, money);
-    }
-}
-
-void CmangosModuleMgr::OnSummoned(Player* player, const ObjectGuid& summoner)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnSummoned(player, summoner);
-    }
-}
-
-void CmangosModuleMgr::OnAreaExplored(Player* player, uint32 areaId)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnAreaExplored(player, areaId);
-    }
-}
-
-void CmangosModuleMgr::OnUpdateHonor(Player* player)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnUpdateHonor(player);
-    }
-}
-
-void CmangosModuleMgr::OnSendMail(Player* player, const ObjectGuid& receiver, uint32 cost)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnSendMail(player, receiver, cost);
-    }
-}
-
-void CmangosModuleMgr::OnAbandonQuest(Player* player, uint32 questId)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnAbandonQuest(player, questId);
-    }
-}
-
-void CmangosModuleMgr::OnUpdateBid(AuctionEntry* auctionEntry, Player* player, uint32 newBid)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnUpdateBid(auctionEntry, player, newBid);
-    }
-}
-
-void CmangosModuleMgr::OnWriteDump(uint32 playerId, std::string& dump)
-{
-    for (CmangosModule* module : modules)
-    {
-        module->OnWriteDump(playerId, dump);
-    }
-}
-
-bool CmangosModuleMgr::IsModuleDumpTable(const std::string& dbTableName)
-{
-    for (CmangosModule* module : modules)
-    {
-        if (module->IsModuleDumpTable(dbTableName))
+        for (Module* mod : modules)
         {
-            return true;
+            mod->OnAddSpell(player, spellId);
         }
     }
 
-    return false;
-}
-
-bool CmangosModuleMgr::OnExecuteCommand(ChatHandler* chatHandler, const std::string& cmd)
-{
-    if (!cmd.empty())
+    void ModuleMgr::OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType)
     {
-        // Extract the prefix and suffix of the cmd
-        std::string cmdSuffix, cmdArgs;
-        std::string cmdPrefix = cmd;
-        size_t spacePos = cmd.find(' ');
-        if (spacePos != std::string::npos)
+        for (Module* mod : modules)
         {
-            cmdPrefix = cmd.substr(0, spacePos);
-            cmdSuffix = cmd.substr(spacePos + 1);
+            mod->OnDuelComplete(player, opponent, duelCompleteType);
+        }
+    }
 
-            // Extract possible extra args from suffix
-            spacePos = cmdSuffix.find(' ');
+    void ModuleMgr::OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnKilledMonsterCredit(player, entry, guid);
+        }
+    }
+
+    bool ModuleMgr::OnPreRewardPlayerAtKill(Player* player, Unit* victim)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnPreRewardPlayerAtKill(player, victim))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    void ModuleMgr::OnRewardPlayerAtKill(Player* player, Unit* victim)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnRewardPlayerAtKill(player, victim);
+        }
+    }
+
+    bool ModuleMgr::OnHandlePageTextQuery(Player* player, const WorldPacket& packet)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnHandlePageTextQuery(player, packet))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    void ModuleMgr::OnUpdateSkill(Player* player, uint16 skillId)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnUpdateSkill(player, skillId);
+        }
+    }
+
+    void ModuleMgr::OnRewardHonor(Player* player, Unit* victim)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnRewardHonor(player, victim);
+        }
+    }
+
+    void ModuleMgr::OnEquipItem(Player* player, Item* item)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnEquipItem(player, item);
+        }
+    }
+
+    void ModuleMgr::OnTaxiFlightRouteStart(Player* player, const Taxi::Tracker& taxiTracker, bool initial)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnTaxiFlightRouteStart(player, taxiTracker, initial);
+        }
+    }
+
+    void ModuleMgr::OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker& taxiTracker, bool final)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnTaxiFlightRouteEnd(player, taxiTracker, final);
+        }
+    }
+
+    void ModuleMgr::OnEmote(Player* player, Unit* target, uint32 emote)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnEmote(player, target, emote);
+        }
+    }
+
+    void ModuleMgr::OnBuyBankSlot(Player* player, uint32 slot, uint32 price)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnBuyBankSlot(player, slot, price);
+        }
+    }
+
+    bool ModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnRespawn(creature, respawnTime))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    void ModuleMgr::OnRespawnRequest(Creature* creature)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnRespawnRequest(creature);
+        }
+    }
+
+    bool ModuleMgr::OnUse(GameObject* gameObject, Unit* user)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnUse(gameObject, user))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    bool ModuleMgr::OnCalculateEffectiveDodgeChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnCalculateEffectiveDodgeChance(unit, attacker, attType, ability, outChance))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    bool ModuleMgr::OnCalculateEffectiveBlockChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnCalculateEffectiveBlockChance(unit, attacker, attType, ability, outChance))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    bool ModuleMgr::OnCalculateEffectiveParryChance(const Unit* unit, const Unit* attacker, uint8 attType, const SpellEntry* ability, float& outChance)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnCalculateEffectiveParryChance(unit, attacker, attType, ability, outChance))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    bool ModuleMgr::OnCalculateEffectiveCritChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, float& outChance)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnCalculateEffectiveCritChance(unit, victim, attType, ability, outChance))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    bool ModuleMgr::OnCalculateEffectiveMissChance(const Unit* unit, const Unit* victim, uint8 attType, const SpellEntry* ability, const Spell* const* currentSpells, const SpellPartialResistDistribution& spellPartialResistDistribution, float& outChance)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnCalculateEffectiveMissChance(unit, victim, attType, ability, currentSpells, spellPartialResistDistribution, outChance))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    bool ModuleMgr::OnCalculateSpellMissChance(const Unit* unit, const Unit* victim, uint32 schoolMask, const SpellEntry* spell, float& outChance)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnCalculateSpellMissChance(unit, victim, schoolMask, spell, outChance))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    bool ModuleMgr::OnGetAttackDistance(const Unit* unit, const Unit* target, float& outDistance)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnGetAttackDistance(unit, target, outDistance))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    void ModuleMgr::OnDealDamage(Unit* unit, Unit* victim, uint32 health, uint32 damage)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnDealDamage(unit, victim, health, damage);
+        }
+    }
+
+    void ModuleMgr::OnKill(Unit* unit, Unit* victim)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnKill(unit, victim);
+        }
+    }
+
+    void ModuleMgr::OnDealHeal(Unit* unit, Unit* victim, int32 gain, uint32 addHealth)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnDealHeal(unit, victim, gain, addHealth);
+        }
+    }
+
+    void ModuleMgr::OnHit(Spell* spell, Unit* caster, Unit* victim)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnHit(spell, caster, victim);
+        }
+    }
+
+    void ModuleMgr::OnCast(Spell* spell, Unit* caster, Unit* victim)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnCast(spell, caster, victim);
+        }
+    }
+
+    bool ModuleMgr::OnFillLoot(Loot* loot, Player* owner)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnFillLoot(loot, owner))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    bool ModuleMgr::OnGenerateMoneyLoot(Loot* loot, uint32& outMoney)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnGenerateMoneyLoot(loot, outMoney))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
+    void ModuleMgr::OnAddItem(Loot* loot, LootItem* lootItem)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnAddItem(loot, lootItem);
+        }
+    }
+
+    void ModuleMgr::OnSendGold(Loot* loot, Player* player, uint32 gold, uint8 lootMethod)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnSendGold(loot, player, gold, lootMethod);
+        }
+    }
+
+    void ModuleMgr::OnHandleLootMasterGive(Loot* loot, Player* target, LootItem* lootItem)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnHandleLootMasterGive(loot, target, lootItem);
+        }
+    }
+
+    void ModuleMgr::OnPlayerRoll(Loot* loot, Player* player, uint32 itemSlot, uint8 rollType)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnPlayerRoll(loot, player, itemSlot, rollType);
+        }
+    }
+
+    void ModuleMgr::OnPlayerWinRoll(Loot* loot, Player* player, uint8 rollType, uint8 rollAmount, uint32 itemSlot, uint8 inventoryResult)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnPlayerWinRoll(loot, player, rollType, rollAmount, itemSlot, inventoryResult);
+        }
+    }
+
+    void ModuleMgr::OnStartBattleGround(BattleGround* battleground)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnStartBattleGround(battleground);
+        }
+    }
+
+    void ModuleMgr::OnEndBattleGround(BattleGround* battleground, uint32 winnerTeam)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnEndBattleGround(battleground, winnerTeam);
+        }
+    }
+
+    void ModuleMgr::OnUpdatePlayerScore(BattleGround* battleground, Player* player, uint8 scoreType, uint32 value)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnUpdatePlayerScore(battleground, player, scoreType, value);
+        }
+    }
+
+    void ModuleMgr::OnLeaveBattleGround(BattleGround* battleground, Player* player)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnLeaveBattleGround(battleground, player);
+        }
+    }
+
+    void ModuleMgr::OnJoinBattleGround(BattleGround* battleground, Player* player)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnJoinBattleGround(battleground, player);
+        }
+    }
+
+    void ModuleMgr::OnPickUpFlag(BattleGroundWS* battleground, Player* player, uint32 team)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnPickUpFlag(battleground, player, team);
+        }
+    }
+
+    void ModuleMgr::OnSellItem(AuctionEntry* auctionEntry, Player* player)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnSellItem(auctionEntry, player);
+        }
+    }
+
+    void ModuleMgr::OnSellItem(Player* player, Item* item, uint32 money)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnSellItem(player, item, money);
+        }
+    }
+
+    void ModuleMgr::OnBuyBackItem(Player* player, Item* item, uint32 money)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnBuyBackItem(player, item, money);
+        }
+    }
+
+    void ModuleMgr::OnSummoned(Player* player, const ObjectGuid& summoner)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnSummoned(player, summoner);
+        }
+    }
+
+    void ModuleMgr::OnAreaExplored(Player* player, uint32 areaId)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnAreaExplored(player, areaId);
+        }
+    }
+
+    void ModuleMgr::OnUpdateHonor(Player* player)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnUpdateHonor(player);
+        }
+    }
+
+    void ModuleMgr::OnSendMail(Player* player, const ObjectGuid& receiver, uint32 cost)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnSendMail(player, receiver, cost);
+        }
+    }
+
+    void ModuleMgr::OnAbandonQuest(Player* player, uint32 questId)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnAbandonQuest(player, questId);
+        }
+    }
+
+    void ModuleMgr::OnUpdateBid(AuctionEntry* auctionEntry, Player* player, uint32 newBid)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnUpdateBid(auctionEntry, player, newBid);
+        }
+    }
+
+    void ModuleMgr::OnWriteDump(uint32 playerId, std::string& dump)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnWriteDump(playerId, dump);
+        }
+    }
+
+    bool ModuleMgr::IsModuleDumpTable(const std::string& dbTableName)
+    {
+        for (Module* mod : modules)
+        {
+            if (mod->IsModuleDumpTable(dbTableName))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool ModuleMgr::OnExecuteCommand(ChatHandler* chatHandler, const std::string& cmd)
+    {
+        if (!cmd.empty())
+        {
+            // Extract the prefix and suffix of the cmd
+            std::string cmdSuffix, cmdArgs;
+            std::string cmdPrefix = cmd;
+            size_t spacePos = cmd.find(' ');
             if (spacePos != std::string::npos)
             {
-                cmdArgs = cmdSuffix.substr(spacePos + 1);
-                cmdSuffix = cmdSuffix.substr(0, spacePos);
-            }
-        }
+                cmdPrefix = cmd.substr(0, spacePos);
+                cmdSuffix = cmd.substr(spacePos + 1);
 
-        if (!cmdPrefix.empty() && !cmdSuffix.empty())
-        {
-            WorldSession* session = chatHandler->GetSession();
-            for (CmangosModule* module : modules)
-            {
-                const char* moduleCommandPrefix = module->GetChatCommandPrefix();
-                if (moduleCommandPrefix && moduleCommandPrefix == cmdPrefix)
+                // Extract possible extra args from suffix
+                spacePos = cmdSuffix.find(' ');
+                if (spacePos != std::string::npos)
                 {
-                    std::vector<ModuleChatCommand>* commandTable = module->GetCommandTable();
-                    if (commandTable)
+                    cmdArgs = cmdSuffix.substr(spacePos + 1);
+                    cmdSuffix = cmdSuffix.substr(0, spacePos);
+                }
+            }
+
+            if (!cmdPrefix.empty() && !cmdSuffix.empty())
+            {
+                WorldSession* session = chatHandler->GetSession();
+                for (Module* mod : modules)
+                {
+                    const char* moduleCommandPrefix = mod->GetChatCommandPrefix();
+                    if (moduleCommandPrefix && moduleCommandPrefix == cmdPrefix)
                     {
-                        for (auto chatCommand : *commandTable)
+                        std::vector<ModuleChatCommand>* commandTable = mod->GetCommandTable();
+                        if (commandTable)
                         {
-                            if (chatCommand.name == cmdSuffix && session->GetSecurity() >= chatCommand.securityLevel)
+                            for (auto chatCommand : *commandTable)
                             {
-                                return chatCommand.callback(session, cmdArgs);
+                                if (chatCommand.name == cmdSuffix && session->GetSecurity() >= chatCommand.securityLevel)
+                                {
+                                    return chatCommand.callback(session, cmdArgs);
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
 
-    return false;
+        return false;
+    }
 }

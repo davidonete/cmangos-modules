@@ -63,6 +63,17 @@ endforeach()
 include_directories(${CMAKE_SOURCE_DIR}/dep/g3dlite)
 add_definitions(-DENABLE_MODULES)
 
+# Define Expansion
+if ( ${CMAKE_PROJECT_NAME} MATCHES "Classic")
+  add_definitions(-DEXPANSION=0)
+endif()
+if ( ${CMAKE_PROJECT_NAME} MATCHES "TBC")
+  add_definitions(-DEXPANSION=1)
+endif()
+if ( ${CMAKE_PROJECT_NAME} MATCHES "WoTLK")
+  add_definitions(-DEXPANSION=2)
+endif()
+
 set_target_properties(${LIBRARY_NAME} PROPERTIES PROJECT_LABEL "Modules")
 
 if(UNIX)

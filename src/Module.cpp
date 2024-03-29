@@ -37,7 +37,55 @@ namespace cmangos_module
 
         bool IsAlliance(Player* player)
         {
-            return IsAlliance(player->getRace());
+            return player && IsAlliance(player->getRace());
+        }
+
+        bool InPvpMap(Player* player)
+        {
+            if (player)
+            {
+                if (player->InBattleGround())
+                    return true;
+
+#if EXPANSION > 0
+                if (player->InArena())
+                    return true;
+#endif
+            }
+
+            return false;
+        }
+
+        bool InDungeon(Player* player)
+        {
+            if (player && player->IsInWorld())
+            {
+                if (!player->IsBeingTeleported())
+                {
+                    if (const Map* map = player->GetMap())
+                    {
+                        return map->IsDungeon();
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        bool InRaid(Player* player)
+        {
+            if (player && player->IsInWorld())
+            {
+                if (!player->IsBeingTeleported())
+                {
+                    if (const Map* map = player->GetMap())
+                    {
+                        return map->IsRaid();
+                    }
+                }
+            }
+
+            return false;
         }
     }
 

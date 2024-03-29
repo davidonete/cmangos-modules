@@ -45,6 +45,9 @@ namespace cmangos_module
         bool IsMaxLevel(Player* player);
         bool IsAlliance(uint8 race);
         bool IsAlliance(Player* player);
+        bool InPvpMap(Player* player);
+        bool InDungeon(Player* player);
+        bool InRaid(Player* player);
     }
 
     class ModuleConfig;

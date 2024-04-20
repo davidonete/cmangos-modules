@@ -48,6 +48,12 @@ namespace cmangos_module
         bool InPvpMap(Player* player);
         bool InDungeon(Player* player);
         bool InRaid(Player* player);
+
+        void ForEachEquippedItem(const Player* player, std::function<void(Item*)> callback);
+        void ForEachInventoryItem(const Player* player, std::function<void(Item*)> callback);
+        void ForEachKeyItem(const Player* player, std::function<void(Item*)> callback);
+        void ForEachBankItem(const Player* player, std::function<void(Item*)> callback);
+        void ForEachItem(const Player* player, std::function<void(Item*)> callback);
     }
 
     class ModuleConfig;

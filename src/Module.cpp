@@ -87,6 +87,65 @@ namespace cmangos_module
 
             return false;
         }
+
+        void ForEachItemInternal(const Player* player, uint8 start, uint8 end, std::function<void(Item*)> callback)
+        {
+            if (player)
+            {
+                for (uint8 i = start; i < end; ++i)
+                {
+                    if (start == INVENTORY_SLOT_BAG_START || start == BANK_SLOT_BAG_START)
+                    {
+                        if (Bag* bag = (Bag*)player->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+                        {
+                            for (uint32 j = 0; j < bag->GetBagSize(); ++j)
+                            {
+                                if (Item* item = bag->GetItemByPos(j))
+                                {
+                                    callback(item);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (Item* item = player->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+                        {
+                            callback(item);
+                        }
+                    }
+                }
+            }
+        }
+
+        void ForEachEquippedItem(const Player* player, std::function<void(Item*)> callback)
+        {
+            ForEachItemInternal(player, EQUIPMENT_SLOT_START, EQUIPMENT_SLOT_END, callback);
+        }
+
+        void ForEachInventoryItem(const Player* player, std::function<void(Item*)> callback)
+        {
+            ForEachItemInternal(player, INVENTORY_SLOT_BAG_START, INVENTORY_SLOT_BAG_END, callback);
+        }
+
+        void ForEachKeyItem(const Player* player, std::function<void(Item*)> callback)
+        {
+            ForEachItemInternal(player, KEYRING_SLOT_START, KEYRING_SLOT_END, callback);
+        }
+
+        void ForEachBankItem(const Player* player, std::function<void(Item*)> callback)
+        {
+            ForEachItemInternal(player, BANK_SLOT_ITEM_START, BANK_SLOT_ITEM_END, callback);
+            ForEachItemInternal(player, BANK_SLOT_BAG_START, BANK_SLOT_BAG_END, callback);
+        }
+
+        void ForEachItem(const Player* player, std::function<void(Item*)> callback)
+        {
+            ForEachEquippedItem(player, callback);
+            ForEachInventoryItem(player, callback);
+            ForEachKeyItem(player, callback);
+            ForEachBankItem(player, callback);
+        }
     }
 
     Module::Module(const std::string& name, ModuleConfig* config)

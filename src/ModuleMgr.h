@@ -113,7 +113,7 @@ namespace cmangos_module
         void OnAbandonQuest(Player* player, uint32 questId);
 
         // Creature Hooks
-        void OnAddToMap(Creature* creature);
+        void OnAddToWorld(Creature* creature);
         bool OnRespawn(Creature* creature, time_t& respawnTime);
         void OnRespawnRequest(Creature* creature);
 

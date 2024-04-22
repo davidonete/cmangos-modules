@@ -221,7 +221,7 @@ namespace cmangos_module
 
         // Creature Hooks
         // Called after a creature added into the world
-        virtual void OnAddToMap(Creature* creature) {}
+        virtual void OnAddToWorld(Creature* creature) {}
         // Called before a creature respawns into the world. Return true to override default logic
         virtual bool OnRespawn(Creature* creature, time_t& respawnTime) { return false; }
         // Called when a creature manual respawn is requested

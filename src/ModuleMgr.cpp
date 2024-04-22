@@ -610,11 +610,11 @@ namespace cmangos_module
         }
     }
 
-    void ModuleMgr::OnAddToMap(Creature* creature)
+    void ModuleMgr::OnAddToWorld(Creature* creature)
     {
         for (Module* mod : modules)
         {
-            mod->OnAddToMap(creature);
+            mod->OnAddToWorld(creature);
         }
     }
 

@@ -220,6 +220,8 @@ namespace cmangos_module
         virtual void OnAbandonQuest(Player* player, uint32 questId) {}
 
         // Creature Hooks
+        // Called after a creature added into the world
+        virtual void OnAddToMap(Creature* creature) {}
         // Called before a creature respawns into the world. Return true to override default logic
         virtual bool OnRespawn(Creature* creature, time_t& respawnTime) { return false; }
         // Called when a creature manual respawn is requested

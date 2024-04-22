@@ -610,6 +610,14 @@ namespace cmangos_module
         }
     }
 
+    void ModuleMgr::OnAddToMap(Creature* creature)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnAddToMap(creature);
+        }
+    }
+
     bool ModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
     {
         bool overriden = false;

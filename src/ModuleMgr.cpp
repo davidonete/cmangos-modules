@@ -610,6 +610,14 @@ namespace cmangos_module
         }
     }
 
+    void ModuleMgr::OnAddToWorld(Creature* creature)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnAddToWorld(creature);
+        }
+    }
+
     bool ModuleMgr::OnRespawn(Creature* creature, time_t& respawnTime)
     {
         bool overriden = false;

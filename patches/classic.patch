@@ -1,7 +1,7 @@
-From a0db8161109a6ff071b975657bdc788f24d6b24c Mon Sep 17 00:00:00 2001
+From ba7aec6fc082ba757d5157655fc25e0ff226a062 Mon Sep 17 00:00:00 2001
 From: Flekz <davidparraausina@gmail.com>
-Date: Fri, 5 Apr 2024 21:25:54 +0100
-Subject: [PATCH] Merge core
+Date: Tue, 23 Apr 2024 17:42:49 +0100
+Subject: [PATCH] merge module system
 
 ---
  CMakeLists.txt                                |  50 +++++
@@ -18,7 +18,7 @@ Subject: [PATCH] Merge core
  src/game/CMakeLists.txt                       |  19 ++
  src/game/Chat/Chat.cpp                        |   9 +
  src/game/Chat/ChatHandler.cpp                 |   8 +
- src/game/Entities/Creature.cpp                |  13 ++
+ src/game/Entities/Creature.cpp                |  17 ++
  src/game/Entities/GameObject.cpp              |  30 +++
  src/game/Entities/ItemHandler.cpp             |  16 ++
  src/game/Entities/NPCHandler.cpp              |  17 ++
@@ -39,7 +39,7 @@ Subject: [PATCH] Merge core
  src/game/Spells/SpellHandler.cpp              |   9 +
  src/game/Tools/PlayerDump.cpp                 |  17 ++
  src/game/World/World.cpp                      |  16 ++
- 35 files changed, 747 insertions(+), 7 deletions(-)
+ 35 files changed, 751 insertions(+), 7 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index dd051f851..6855687b1 100644
@@ -493,7 +493,7 @@ index 54c0ff7f8..12401364e 100644
    # Both systems don't have libdl and don't need them
    if (NOT (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD"))
 diff --git a/src/game/Chat/Chat.cpp b/src/game/Chat/Chat.cpp
-index 83b099c65..15152a534 100644
+index 9b9f69913..cd5fbf8a5 100644
 --- a/src/game/Chat/Chat.cpp
 +++ b/src/game/Chat/Chat.cpp
 @@ -41,6 +41,10 @@
@@ -507,7 +507,7 @@ index 83b099c65..15152a534 100644
  #include <cstdarg>
  
  // Supported shift-links (client generated and server side)
-@@ -1451,6 +1455,11 @@ void ChatHandler::ExecuteCommand(const char* text)
+@@ -1452,6 +1456,11 @@ void ChatHandler::ExecuteCommand(const char* text)
          }
          case CHAT_COMMAND_UNKNOWN:
          {
@@ -520,7 +520,7 @@ index 83b099c65..15152a534 100644
              SetSentErrorMessage(true);
              break;
 diff --git a/src/game/Chat/ChatHandler.cpp b/src/game/Chat/ChatHandler.cpp
-index e822f73e7..e6842be77 100644
+index 7cfc7d8e2..2ce26c903 100644
 --- a/src/game/Chat/ChatHandler.cpp
 +++ b/src/game/Chat/ChatHandler.cpp
 @@ -42,6 +42,10 @@
@@ -534,7 +534,7 @@ index e822f73e7..e6842be77 100644
  bool WorldSession::CheckChatMessage(std::string& msg, bool addon/* = false*/)
  {
  #ifdef BUILD_DEPRECATED_PLAYERBOT
-@@ -797,6 +801,10 @@ void WorldSession::HandleTextEmoteOpcode(WorldPacket& recv_data)
+@@ -796,6 +800,10 @@ void WorldSession::HandleTextEmoteOpcode(WorldPacket& recv_data)
      // Send scripted event call
      if (unit && unit->AI())
          unit->AI()->ReceiveEmote(GetPlayer(), textEmote);
@@ -546,7 +546,7 @@ index e822f73e7..e6842be77 100644
  
  void WorldSession::HandleChatIgnoredOpcode(WorldPacket& recv_data)
 diff --git a/src/game/Entities/Creature.cpp b/src/game/Entities/Creature.cpp
-index 586518340..2751bdf63 100644
+index 586518340..f528dff80 100644
 --- a/src/game/Entities/Creature.cpp
 +++ b/src/game/Entities/Creature.cpp
 @@ -52,6 +52,10 @@
@@ -560,7 +560,18 @@ index 586518340..2751bdf63 100644
  TrainerSpell const* TrainerSpellData::Find(uint32 spell_id) const
  {
      TrainerSpellMap::const_iterator itr = spellList.find(spell_id);
-@@ -699,6 +703,11 @@ void Creature::Update(const uint32 diff)
+@@ -206,6 +210,10 @@ void Creature::AddToWorld()
+ 
+     if (m_countSpawns)
+         GetMap()->AddToSpawnCount(GetObjectGuid());
++
++#ifdef ENABLE_MODULES
++    sModuleMgr.OnAddToWorld(this);
++#endif
+ }
+ 
+ void Creature::RemoveFromWorld()
+@@ -699,6 +707,11 @@ void Creature::Update(const uint32 diff)
          {
              if (m_respawnTime <= time(nullptr) && (!m_isSpawningLinked || GetMap()->GetCreatureLinkingHolder()->CanSpawn(this)))
              {
@@ -572,7 +583,7 @@ index 586518340..2751bdf63 100644
                  DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "Respawning...");
                  m_respawnTime = 0;
                  SetCanAggro(false);
-@@ -1857,6 +1866,10 @@ void Creature::Respawn()
+@@ -1857,6 +1870,10 @@ void Creature::Respawn()
          if (HasStaticDBSpawnData())
              GetMap()->GetPersistentState()->SaveCreatureRespawnTime(GetDbGuid(), 0);
          m_respawnTime = time(nullptr);                         // respawn at next tick
@@ -748,7 +759,7 @@ index 32ce33727..4dfd1faf3 100644
      {
          Creature* pCreature = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
 diff --git a/src/game/Entities/Player.cpp b/src/game/Entities/Player.cpp
-index d0b04ab82..7431d137d 100644
+index de78618f6..d7f822bc0 100644
 --- a/src/game/Entities/Player.cpp
 +++ b/src/game/Entities/Player.cpp
 @@ -73,6 +73,10 @@
@@ -927,7 +938,7 @@ index d0b04ab82..7431d137d 100644
      if (!applySickness)
          return;
  
-@@ -4706,6 +4777,10 @@ void Player::RepopAtGraveyard()
+@@ -4715,6 +4786,10 @@ void Player::RepopAtGraveyard()
          if (updateVisibility && IsInWorld())
              UpdateVisibilityAndView();
      }
@@ -938,7 +949,7 @@ index d0b04ab82..7431d137d 100644
  }
  
  void Player::JoinedChannel(Channel* c)
-@@ -5044,6 +5119,10 @@ bool Player::UpdateSkill(uint16 id, uint16 diff)
+@@ -5053,6 +5128,10 @@ bool Player::UpdateSkill(uint16 id, uint16 diff)
          if (skillStatus.uState != SKILL_NEW)
              skillStatus.uState = SKILL_CHANGED;
  
@@ -949,7 +960,7 @@ index d0b04ab82..7431d137d 100644
          return true;
      }
  
-@@ -5194,6 +5273,10 @@ bool Player::UpdateSkillPro(uint16 SkillId, int32 Chance, uint16 diff)
+@@ -5203,6 +5282,10 @@ bool Player::UpdateSkillPro(uint16 SkillId, int32 Chance, uint16 diff)
          if (skillStatus.uState != SKILL_NEW)
              skillStatus.uState = SKILL_CHANGED;
  
@@ -960,7 +971,7 @@ index d0b04ab82..7431d137d 100644
          DEBUG_LOG("Player::UpdateSkillPro Chance=%3.1f%% taken", Chance / 10.0);
          return true;
      }
-@@ -5326,6 +5409,10 @@ void Player::SetSkill(SkillStatusMap::iterator itr, uint16 value, uint16 max, ui
+@@ -5335,6 +5418,10 @@ void Player::SetSkill(SkillStatusMap::iterator itr, uint16 value, uint16 max, ui
  
          if (status.uState != SKILL_NEW)
              status.uState = SKILL_CHANGED;
@@ -971,7 +982,7 @@ index d0b04ab82..7431d137d 100644
      }
      else        // Remove
      {
-@@ -6197,6 +6284,10 @@ void Player::CheckAreaExploreAndOutdoor()
+@@ -6206,6 +6293,10 @@ void Player::CheckAreaExploreAndOutdoor()
                  SendExplorationExperience(area, XP);
              }
              DETAIL_LOG("PLAYER: Player %u discovered a new area: %u", GetGUIDLow(), area);
@@ -982,7 +993,7 @@ index d0b04ab82..7431d137d 100644
          }
      }
  }
-@@ -6504,6 +6595,10 @@ void Player::UpdateHonor()
+@@ -6513,6 +6604,10 @@ void Player::UpdateHonor()
      // SetUInt32Value(PLAYER_FIELD_PVP_MEDALS/*???*/, (GetHonorHighestRankInfo().rank << 24) | 0x0F0001);
      // ITEM FIELD RANK REQUIRED
      SetByteValue(PLAYER_FIELD_BYTES, 3, GetHonorHighestRankInfo().rank);
@@ -993,7 +1004,7 @@ index d0b04ab82..7431d137d 100644
  }
  
  void Player::ResetHonor()
-@@ -6657,6 +6752,11 @@ bool Player::AddHonorCP(float honor, uint8 type, Unit* victim)
+@@ -6666,6 +6761,11 @@ bool Player::AddHonorCP(float honor, uint8 type, Unit* victim)
      SendDirectMessage(data);
  
      UpdateHonor();
@@ -1005,7 +1016,7 @@ index d0b04ab82..7431d137d 100644
      return true;
  }
  
-@@ -6943,6 +7043,10 @@ void Player::DuelComplete(DuelCompleteType type)
+@@ -6952,6 +7052,10 @@ void Player::DuelComplete(DuelCompleteType type)
      ForceHealthAndPowerUpdate();
      duel->opponent->ForceHealthAndPowerUpdate();
  
@@ -1016,7 +1027,7 @@ index d0b04ab82..7431d137d 100644
      delete duel->opponent->duel;
      duel->opponent->duel = nullptr;
      delete duel;
-@@ -9849,6 +9953,10 @@ Item* Player::StoreItem(ItemPosCountVec const& dest, Item* pItem, bool update)
+@@ -9858,6 +9962,10 @@ Item* Player::StoreItem(ItemPosCountVec const& dest, Item* pItem, bool update)
          lastItem = _StoreItem(pos, pItem, count, true, update);
      }
  
@@ -1027,7 +1038,7 @@ index d0b04ab82..7431d137d 100644
      return lastItem;
  }
  
-@@ -10022,6 +10130,10 @@ Item* Player::EquipItem(uint16 pos, Item* pItem, bool update)
+@@ -10031,6 +10139,10 @@ Item* Player::EquipItem(uint16 pos, Item* pItem, bool update)
              UpdateWeaponDependantStats(OFF_ATTACK);
          else if (slot == EQUIPMENT_SLOT_RANGED)
              UpdateWeaponDependantStats(RANGED_ATTACK);
@@ -1038,7 +1049,7 @@ index d0b04ab82..7431d137d 100644
      }
      else
      {
-@@ -10046,6 +10158,10 @@ Item* Player::EquipItem(uint16 pos, Item* pItem, bool update)
+@@ -10055,6 +10167,10 @@ Item* Player::EquipItem(uint16 pos, Item* pItem, bool update)
  
          ApplyEquipCooldown(pItem2);
  
@@ -1049,7 +1060,7 @@ index d0b04ab82..7431d137d 100644
          return pItem2;
      }
  
-@@ -10067,6 +10183,10 @@ void Player::QuickEquipItem(uint16 pos, Item* pItem)
+@@ -10076,6 +10192,10 @@ void Player::QuickEquipItem(uint16 pos, Item* pItem)
              pItem->AddToWorld();
              pItem->SendCreateUpdateToPlayer(this);
          }
@@ -1060,7 +1071,7 @@ index d0b04ab82..7431d137d 100644
      }
  }
  
-@@ -10099,6 +10219,10 @@ void Player::SetVisibleItemSlot(uint8 slot, Item* pItem)
+@@ -10108,6 +10228,10 @@ void Player::SetVisibleItemSlot(uint8 slot, Item* pItem)
          SetUInt32Value(PLAYER_VISIBLE_ITEM_1_PROPERTIES + 0 + (slot * MAX_VISIBLE_ITEM_OFFSET), 0);
          SetUInt32Value(PLAYER_VISIBLE_ITEM_1_PROPERTIES + 1 + (slot * MAX_VISIBLE_ITEM_OFFSET), 0);
      }
@@ -1071,7 +1082,7 @@ index d0b04ab82..7431d137d 100644
  }
  
  void Player::VisualizeItem(uint8 slot, Item* pItem)
-@@ -10207,6 +10331,10 @@ void Player::MoveItemFromInventory(uint8 bag, uint8 slot, bool update)
+@@ -10216,6 +10340,10 @@ void Player::MoveItemFromInventory(uint8 bag, uint8 slot, bool update)
              it->RemoveFromWorld();
              it->DestroyForPlayer(this);
          }
@@ -1082,7 +1093,7 @@ index d0b04ab82..7431d137d 100644
      }
  }
  
-@@ -10230,6 +10358,10 @@ void Player::MoveItemToInventory(ItemPosCountVec const& dest, Item* pItem, bool
+@@ -10239,6 +10367,10 @@ void Player::MoveItemToInventory(ItemPosCountVec const& dest, Item* pItem, bool
          // in case trade we already have item in other player inventory
          pLastItem->SetState(in_characterInventoryDB ? ITEM_CHANGED : ITEM_NEW, this);
      }
@@ -1093,7 +1104,7 @@ index d0b04ab82..7431d137d 100644
  }
  
  void Player::DestroyItem(uint8 bag, uint8 slot, bool update)
-@@ -12672,6 +12804,10 @@ void Player::RewardQuest(Quest const* pQuest, uint32 reward, Object* questGiver,
+@@ -12681,6 +12813,10 @@ void Player::RewardQuest(Quest const* pQuest, uint32 reward, Object* questGiver,
      saBounds = sSpellMgr.GetSpellAreaForAreaMapBounds(0);
      for (SpellAreaForAreaMap::const_iterator itr = saBounds.first; itr != saBounds.second; ++itr)
          itr->second->ApplyOrRemoveSpellIfCan(this, zone, area, false);
@@ -1104,7 +1115,7 @@ index d0b04ab82..7431d137d 100644
  }
  
  bool Player::IsQuestExplored(uint32 quest_id) const
-@@ -13500,6 +13636,10 @@ void Player::KilledMonsterCredit(uint32 entry, ObjectGuid guid)
+@@ -13509,6 +13645,10 @@ void Player::KilledMonsterCredit(uint32 entry, ObjectGuid guid)
              }
          }
      }
@@ -1115,7 +1126,7 @@ index d0b04ab82..7431d137d 100644
  }
  
  void Player::CastedCreatureOrGO(uint32 entry, ObjectGuid guid, uint32 spell_id, bool original_caster)
-@@ -14018,6 +14158,10 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
+@@ -14027,6 +14167,10 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
          return false;
      }
  
@@ -1126,7 +1137,7 @@ index d0b04ab82..7431d137d 100644
      // overwrite possible wrong/corrupted guid
      SetGuidValue(OBJECT_FIELD_GUID, guid);
  
-@@ -14533,11 +14677,20 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
+@@ -14542,11 +14686,20 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
          }
      }
  
@@ -1147,7 +1158,7 @@ index d0b04ab82..7431d137d 100644
      m_actionButtons.clear();
  
      // QueryResult *result = CharacterDatabase.PQuery("SELECT button,action,type FROM character_action WHERE guid = '%u' ORDER BY button",GetGUIDLow());
-@@ -15689,6 +15842,10 @@ void Player::SaveToDB()
+@@ -15698,6 +15851,10 @@ void Player::SaveToDB()
      // save pet (hunter pet level and experience and all type pets health/mana).
      if (Pet* pet = GetPet())
          pet->SavePetToDB(PET_SAVE_AS_CURRENT, this);
@@ -1158,7 +1169,7 @@ index d0b04ab82..7431d137d 100644
  }
  
  // fast save function for item/money cheating preventing - save only inventory and money state
-@@ -15708,6 +15865,11 @@ void Player::SaveGoldToDB() const
+@@ -15717,6 +15874,11 @@ void Player::SaveGoldToDB() const
  
  void Player::_SaveActions()
  {
@@ -1170,7 +1181,7 @@ index d0b04ab82..7431d137d 100644
      static SqlStatementID insertAction ;
      static SqlStatementID updateAction ;
      static SqlStatementID deleteAction ;
-@@ -17319,6 +17481,10 @@ void Player::OnTaxiFlightRouteStart(uint32 pathID, bool initial)
+@@ -17328,6 +17490,10 @@ void Player::OnTaxiFlightRouteStart(uint32 pathID, bool initial)
          if (const TaxiPathEntry* path = sTaxiPathStore.LookupEntry(pathID))
              OnTaxiFlightStart(path);
      }
@@ -1181,7 +1192,7 @@ index d0b04ab82..7431d137d 100644
  }
  
  void Player::OnTaxiFlightRouteEnd(uint32 pathID, bool final)
-@@ -17330,6 +17496,10 @@ void Player::OnTaxiFlightRouteEnd(uint32 pathID, bool final)
+@@ -17339,6 +17505,10 @@ void Player::OnTaxiFlightRouteEnd(uint32 pathID, bool final)
      }
      else
          ModifyMoney(-int32(m_taxiTracker.GetCost()));
@@ -1192,7 +1203,7 @@ index d0b04ab82..7431d137d 100644
  }
  
  void Player::OnTaxiFlightRouteProgress(const TaxiPathNodeEntry* node, const TaxiPathNodeEntry* next /*= nullptr*/)
-@@ -18510,6 +18680,10 @@ void Player::SummonIfPossible(bool agree, ObjectGuid guid)
+@@ -18519,6 +18689,10 @@ void Player::SummonIfPossible(bool agree, ObjectGuid guid)
      if (BattleGround* bg = GetBattleGround())
          bg->HandlePlayerDroppedFlag(this);
  
@@ -1203,7 +1214,7 @@ index d0b04ab82..7431d137d 100644
      m_summon_expire = 0;
      m_summoner.Clear();
  
-@@ -18730,6 +18904,11 @@ bool Player::isHonorOrXPTarget(Unit* pVictim) const
+@@ -18739,6 +18913,11 @@ bool Player::isHonorOrXPTarget(Unit* pVictim) const
  
  void Player::RewardSinglePlayerAtKill(Unit* pVictim)
  {
@@ -1215,7 +1226,7 @@ index d0b04ab82..7431d137d 100644
      // honor can be in PvP and !PvP (racial leader) cases
      RewardHonor(pVictim, 1);
  
-@@ -18747,6 +18926,11 @@ void Player::RewardSinglePlayerAtKill(Unit* pVictim)
+@@ -18756,6 +18935,11 @@ void Player::RewardSinglePlayerAtKill(Unit* pVictim)
          if (CreatureInfo const* normalInfo = creatureVictim->GetCreatureInfo())
              KilledMonster(normalInfo, creatureVictim);
      }
@@ -1227,7 +1238,7 @@ index d0b04ab82..7431d137d 100644
  }
  
  void Player::RewardPlayerAndGroupAtEventCredit(uint32 creature_id, WorldObject* pRewardSource)
-@@ -19518,6 +19702,12 @@ InventoryResult Player::CanEquipUniqueItem(ItemPrototype const* itemProto, uint8
+@@ -19527,6 +19711,12 @@ InventoryResult Player::CanEquipUniqueItem(ItemPrototype const* itemProto, uint8
  
  void Player::HandleFall(MovementInfo const& movementInfo)
  {
@@ -1240,7 +1251,7 @@ index d0b04ab82..7431d137d 100644
      // calculate total z distance of the fall
      Position const& position = movementInfo.GetPos();
      float z_diff = m_lastFallZ - position.z;
-@@ -19551,13 +19741,22 @@ void Player::HandleFall(MovementInfo const& movementInfo)
+@@ -19560,13 +19750,22 @@ void Player::HandleFall(MovementInfo const& movementInfo)
                  if (GetDummyAura(43621))
                      damage = GetMaxHealth() / 2;
  
@@ -1263,7 +1274,7 @@ index d0b04ab82..7431d137d 100644
  }
  
  void Player::LearnTalent(uint32 talentId, uint32 talentRank)
-@@ -19674,6 +19873,10 @@ void Player::LearnTalent(uint32 talentId, uint32 talentRank)
+@@ -19683,6 +19882,10 @@ void Player::LearnTalent(uint32 talentId, uint32 talentRank)
      // learn! (other talent ranks will unlearned at learning)
      learnSpell(spellid, false, true);
      DETAIL_LOG("TalentID: %u Rank: %u Spell: %u\n", talentId, talentRank, spellid);
@@ -1275,10 +1286,10 @@ index d0b04ab82..7431d137d 100644
  
  void Player::UpdateFallInformationIfNeed(MovementInfo const& minfo, uint16 opcode)
 diff --git a/src/game/Entities/Player.h b/src/game/Entities/Player.h
-index 3f5033519..f17a3a068 100644
+index 5c3097d92..925fbe474 100644
 --- a/src/game/Entities/Player.h
 +++ b/src/game/Entities/Player.h
-@@ -1392,13 +1392,7 @@ class Player : public Unit
+@@ -1395,13 +1395,7 @@ class Player : public Unit
          void RegenerateHealth(uint32 diff);
  
          uint32 GetMoney() const { return GetUInt32Value(PLAYER_FIELD_COINAGE); }

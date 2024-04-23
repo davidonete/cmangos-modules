@@ -41,7 +41,10 @@ namespace cmangos_module
 {
     namespace helper
     {
+        bool IsValidNumberString(const std::string& str);
         std::string FormatString(const char* format, ...);
+        std::vector<std::string> SplitString(const std::string& input, const std::string& delimiter);
+
         bool IsMaxLevel(Player* player);
         bool IsAlliance(uint8 race);
         bool IsAlliance(Player* player);

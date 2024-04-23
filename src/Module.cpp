@@ -9,6 +9,34 @@ namespace cmangos_module
 {
     namespace helper
     {
+
+        bool IsValidNumberString(const std::string& str)
+        {
+            bool valid = !str.empty();
+            if (valid)
+            {
+                // Check for sign character at the beginning
+                size_t start = 0;
+                if (str[0] == '+' || str[0] == '-')
+                {
+                    start = 1;
+                }
+
+                // Loop through each character to check if it's a digit
+                for (size_t i = start; i < str.size(); ++i)
+                {
+                    if (!std::isdigit(str[i]))
+                    {
+                        // Non-numeric character found
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+
+            return valid;
+        }
+
         std::string FormatString(const char* format, ...)
         {
             va_list ap;
@@ -17,6 +45,22 @@ namespace cmangos_module
             vsnprintf(out, 2048, format, ap);
             va_end(ap);
             return std::string(out);
+        }
+
+        std::vector<std::string> SplitString(const std::string& input, const std::string& delimiter)
+        {
+            std::vector<std::string> substrings;
+            size_t start = 0, end;
+
+            while ((end = input.find(delimiter, start)) != std::string::npos)
+            {
+                substrings.push_back(input.substr(start, end - start));
+                start = end + delimiter.length();
+            }
+
+            substrings.push_back(input.substr(start)); // Add the last substring
+
+            return substrings;
         }
 
         bool IsMaxLevel(Player* player)
@@ -125,6 +169,7 @@ namespace cmangos_module
 
         void ForEachInventoryItem(const Player* player, std::function<void(Item*)> callback)
         {
+            ForEachItemInternal(player, INVENTORY_SLOT_ITEM_START, INVENTORY_SLOT_ITEM_END, callback);
             ForEachItemInternal(player, INVENTORY_SLOT_BAG_START, INVENTORY_SLOT_BAG_END, callback);
         }
 

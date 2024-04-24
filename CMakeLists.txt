@@ -75,6 +75,7 @@ if ( ${CMAKE_PROJECT_NAME} MATCHES "WoTLK")
 endif()
 
 set_target_properties(${LIBRARY_NAME} PROPERTIES PROJECT_LABEL "Modules")
+set_target_properties(${LIBRARY_NAME} PROPERTIES FOLDER "Modules")
 
 if(UNIX)
   # Both systems don't have libdl and don't need them

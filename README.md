@@ -10,6 +10,7 @@ Here is a list of compatible modules that you can install with this system:
 - [Dual Spec](https://github.com/davidonete/cmangos-dualspec) (Classic and TBC): A module to bring the dual specialization system from WoTLK to earlier versions of the game
 - [Boost](https://github.com/celguar/cmangos-boost.git) (TBC): A module to boost a character to be ready to the next expansion
 - [Barber](https://github.com/celguar/cmangos-barber.git) (Classic and TBC): A module to add a barber shop in the capital cities
+- [Training Dummies](https://github.com/davidonete/cmangos-trainingdummies.git) (Classic and TBC): A module to add training dummies in the capital cities
 
 # How to install
 NOTE: At the moment there is no officially supported way for installing this system using the stock cmangos source code, however we have prepared two options depending on your skills. This guide assumes that you have knowledge on using git repositories and know how to compile using cmake, if not please refer to the [Beginners Guide](https://github.com/cmangos/issues/wiki/Beginners-Guide-Introduction) for more info.

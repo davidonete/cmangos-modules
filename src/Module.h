@@ -14,12 +14,14 @@ class Creature;
 class GameObject;
 class Item;
 class Loot;
+class MailDraft;
 class MovementInfo;
 class ObjectGuid;
 class Player;
 class Quest;
 class Spell;
 namespace Taxi { class Tracker; }
+class TradeData;
 class Unit;
 class WorldObject;
 class WorldPacket;
@@ -29,6 +31,7 @@ struct AuctionEntry;
 struct FactionEntry;
 struct GossipMenuItems;
 struct LootItem;
+struct Mail;
 struct PlayerLevelInfo;
 struct SpellEntry;
 struct WorldSafeLocsEntry;
@@ -217,10 +220,10 @@ namespace cmangos_module
         virtual void OnAreaExplored(Player* player, uint32 areaId) {}
         // Called when updating player honor
         virtual void OnUpdateHonor(Player* player) {}
-        // Called when a player sends a mail
-        virtual void OnSendMail(Player* player, const ObjectGuid& receiver, uint32 cost) {}
         // Called when a player abandons a quest
         virtual void OnAbandonQuest(Player* player, uint32 questId) {}
+        // Called when a player accepts a trade
+        virtual void OnTradeAccepted(Player* player, Player* trader, TradeData* playerTrade, TradeData* traderTrade) {}
 
         // Creature Hooks
         // Called after a creature added into the world
@@ -292,11 +295,27 @@ namespace cmangos_module
         // Called when a player picks up the flag from the base
         virtual void OnPickUpFlag(BattleGroundWS* battleground, Player* player, uint32 team) {}
 
+        // Group Hooks
+        // Called when a player is added to a group
+        virtual void OnAddMember(Group* group, Player* player, uint8 method) {}
+        // Called when a player is removed from a group
+        virtual void OnRemoveMember(Group* group, Player* player, uint8 method) {}
+
         // Auction House Hooks
         // Called when a player puts an item for sale into the auction house
         virtual void OnSellItem(AuctionEntry* auctionEntry, Player* player) {}
         // Called when a player puts a bid for an auction item
         virtual void OnUpdateBid(AuctionEntry* auctionEntry, Player* player, uint32 newBid) {}
+        // Called when a player wins a bid against an auction item
+        virtual void OnActionBidWinning(AuctionEntry* auctionEntry, const ObjectGuid& owner, const ObjectGuid& bidder) {}
+
+        // Mail Hooks
+        // Called when a player sends a mail
+        virtual void OnSendMail(const MailDraft& mail, Player* player, const ObjectGuid& receiver, uint32 cost) {}
+        // Called when a player takes an item from the mail
+        virtual void OnMailTakeItem(Mail* mail, Player* player, Item* item, const ObjectGuid& sender) {}
+        // Called when a player takes money from the mail
+        virtual void OnMailTakeMoney(Mail* mail, Player* player, uint32 amount, const ObjectGuid& sender) {}
 
         // Player Dump Hooks
         // Called when dumping a player character

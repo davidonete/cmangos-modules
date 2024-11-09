@@ -908,6 +908,22 @@ namespace cmangos_module
         }
     }
 
+    void ModuleMgr::OnAddMember(Group* group, Player* player, uint8 method)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnAddMember(group, player, method);
+        }
+    }
+
+    void ModuleMgr::OnRemoveMember(Group* group, Player* player, uint8 method)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnRemoveMember(group, player, method);
+        }
+    }
+
     void ModuleMgr::OnSellItem(AuctionEntry* auctionEntry, Player* player)
     {
         for (Module* mod : modules)
@@ -956,14 +972,6 @@ namespace cmangos_module
         }
     }
 
-    void ModuleMgr::OnSendMail(Player* player, const ObjectGuid& receiver, uint32 cost)
-    {
-        for (Module* mod : modules)
-        {
-            mod->OnSendMail(player, receiver, cost);
-        }
-    }
-
     void ModuleMgr::OnAbandonQuest(Player* player, uint32 questId)
     {
         for (Module* mod : modules)
@@ -972,11 +980,51 @@ namespace cmangos_module
         }
     }
 
+    void ModuleMgr::OnTradeAccepted(Player* player, Player* trader, TradeData* playerTrade, TradeData* traderTrade)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnTradeAccepted(player, trader, playerTrade, traderTrade);
+        }
+    }
+
     void ModuleMgr::OnUpdateBid(AuctionEntry* auctionEntry, Player* player, uint32 newBid)
     {
         for (Module* mod : modules)
         {
             mod->OnUpdateBid(auctionEntry, player, newBid);
+        }
+    }
+
+    void ModuleMgr::OnActionBidWinning(AuctionEntry* auctionEntry, const ObjectGuid& owner, const ObjectGuid& bidder)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnActionBidWinning(auctionEntry, owner, bidder);
+        }
+    }
+
+    void ModuleMgr::OnSendMail(const MailDraft& mail, Player* player, const ObjectGuid& receiver, uint32 cost)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnSendMail(mail, player, receiver, cost);
+        }
+    }
+
+    void ModuleMgr::OnMailTakeItem(Mail* mail, Player* player, Item* item, const ObjectGuid& sender)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnMailTakeItem(mail, player, item, sender);
+        }
+    }
+
+    void ModuleMgr::OnMailTakeMoney(Mail* mail, Player* player, uint32 amount, const ObjectGuid& sender)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnMailTakeMoney(mail, player, amount, sender);
         }
     }
 

@@ -15,12 +15,14 @@ class Creature;
 class GameObject;
 class Item;
 class Loot;
+class MailDraft;
 class MovementInfo;
 class ObjectGuid;
 class Player;
 class Quest;
 class Spell;
 namespace Taxi { class Tracker; }
+class TradeData;
 class Unit;
 class WorldObject;
 class WorldPacket;
@@ -30,6 +32,7 @@ struct AuctionEntry;
 struct FactionEntry;
 struct GossipMenuItems;
 struct LootItem;
+struct Mail;
 struct PlayerLevelInfo;
 struct SpellEntry;
 struct WorldSafeLocsEntry;
@@ -109,8 +112,8 @@ namespace cmangos_module
         void OnSummoned(Player* player, const ObjectGuid& summoner);
         void OnAreaExplored(Player* player, uint32 areaId);
         void OnUpdateHonor(Player* player);
-        void OnSendMail(Player* player, const ObjectGuid& receiver, uint32 cost);
         void OnAbandonQuest(Player* player, uint32 questId);
+        void OnTradeAccepted(Player* player, Player* trader, TradeData* playerTrade, TradeData* traderTrade);
 
         // Creature Hooks
         void OnAddToWorld(Creature* creature);
@@ -153,9 +156,19 @@ namespace cmangos_module
         void OnJoinBattleGround(BattleGround* battleground, Player* player);
         void OnPickUpFlag(BattleGroundWS* battleground, Player* player, uint32 team);
 
+        // Group Hooks
+        void OnAddMember(Group* group, Player* player, uint8 method);
+        void OnRemoveMember(Group* group, Player* player, uint8 method);
+
         // Auction House Hooks
         void OnSellItem(AuctionEntry* auctionEntry, Player* player);
         void OnUpdateBid(AuctionEntry* auctionEntry, Player* player, uint32 newBid);
+        void OnActionBidWinning(AuctionEntry* auctionEntry, const ObjectGuid& owner, const ObjectGuid& bidder);
+
+        // Mail Hooks
+        void OnSendMail(const MailDraft& mail, Player* player, const ObjectGuid& receiver, uint32 cost);
+        void OnMailTakeItem(Mail* mail, Player* player, Item* item, const ObjectGuid& sender);
+        void OnMailTakeMoney(Mail* mail, Player* player, uint32 amount, const ObjectGuid& sender);
 
         // Player Dump Hooks
         void OnWriteDump(uint32 playerId, std::string& dump);

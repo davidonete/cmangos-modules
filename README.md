@@ -11,6 +11,7 @@ Here is a list of compatible modules that you can install with this system:
 - [Boost](https://github.com/celguar/cmangos-boost.git) (TBC): A module to boost a character to be ready to the next expansion
 - [Barber](https://github.com/celguar/cmangos-barber.git) (Classic and TBC): A module to add a barber shop in the capital cities
 - [Training Dummies](https://github.com/davidonete/cmangos-trainingdummies.git) (Classic and TBC): A module to add training dummies in the capital cities
+- [Paladin power](https://github.com/davidonete/cmangos-balancing.git) (Classic only): A module to balance classes, modifying and adding new spells to classes
 - [Paladin power](https://github.com/Redbu11dev/cmangos-paladinpower) (Classic only): A module to give paladins their cut spells back
 
 # How to install

@@ -34,6 +34,7 @@ struct GossipMenuItems;
 struct LootItem;
 struct Mail;
 struct PlayerLevelInfo;
+struct ProcExecutionData;
 struct SpellEntry;
 struct WorldSafeLocsEntry;
 
@@ -138,6 +139,7 @@ namespace cmangos_module
         // Spell Hooks
         void OnHit(Spell* spell, Unit* caster, Unit* victim);
         void OnCast(Spell* spell, Unit* caster, Unit* victim);
+        void OnProc(const ProcExecutionData& data, SpellAuraProcResult& procResult);
 
         // Loot Hooks
         bool OnFillLoot(Loot* loot, Player* owner);

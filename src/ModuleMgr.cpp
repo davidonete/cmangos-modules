@@ -792,6 +792,14 @@ namespace cmangos_module
         }
     }
 
+    void ModuleMgr::OnProc(const ProcExecutionData& data, SpellAuraProcResult& procResult)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnProc(data, procResult);
+        }
+    }
+
     bool ModuleMgr::OnFillLoot(Loot* loot, Player* owner)
     {
         bool overriden = false;

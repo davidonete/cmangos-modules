@@ -33,6 +33,7 @@ struct GossipMenuItems;
 struct LootItem;
 struct Mail;
 struct PlayerLevelInfo;
+struct ProcExecutionData;
 struct SpellEntry;
 struct WorldSafeLocsEntry;
 
@@ -264,6 +265,8 @@ namespace cmangos_module
         virtual void OnHit(Spell* spell, Unit* caster, Unit* victim) {}
         // Called when a spell is casted
         virtual void OnCast(Spell* spell, Unit* caster, Unit* victim) {}
+        // Casted when a spell is triggered by something
+        virtual void OnProc(const ProcExecutionData& data, SpellAuraProcResult& procResult) {}
 
         // Loot Hooks
         // Called when generating the loot table. Return true to override default logic

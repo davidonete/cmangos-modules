@@ -33,6 +33,7 @@ struct GossipMenuItems;
 struct LootItem;
 struct Mail;
 struct PlayerLevelInfo;
+struct PlayerClassLevelInfo;
 struct ProcExecutionData;
 struct SpellEntry;
 struct WorldSafeLocsEntry;
@@ -187,6 +188,8 @@ namespace cmangos_module
         virtual void OnModifyMoney(Player* player, int32 diff) {}
         // Called when the reputation of a player changes
         virtual void OnSetReputation(Player* player, const FactionEntry* factionEntry, int32 standing, bool incremental) {}
+        // Called when retrieving the player class level info
+        virtual void OnGetPlayerClassLevelInfo(Player* player, PlayerClassLevelInfo& info) {}
         // Called when retrieving the player level info
         virtual void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info) {}
         // Called when a player skill changes
@@ -225,6 +228,8 @@ namespace cmangos_module
         virtual void OnAbandonQuest(Player* player, uint32 questId) {}
         // Called when a player accepts a trade
         virtual void OnTradeAccepted(Player* player, Player* trader, TradeData* playerTrade, TradeData* traderTrade) {}
+        // Called when a player regenerates power
+        virtual void OnRegenerate(Player* player, uint8 power, uint32 diff, float& addedValue) {}
 
         // Creature Hooks
         // Called after a creature added into the world

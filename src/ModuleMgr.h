@@ -33,6 +33,7 @@ struct FactionEntry;
 struct GossipMenuItems;
 struct LootItem;
 struct Mail;
+struct PlayerClassLevelInfo;
 struct PlayerLevelInfo;
 struct ProcExecutionData;
 struct SpellEntry;
@@ -89,6 +90,7 @@ namespace cmangos_module
         void OnModifyMoney(Player* player, int32 diff);
         void OnSetReputation(Player* player, const FactionEntry* factionEntry, int32 standing, bool incremental);
         void OnRewardQuest(Player* player, const Quest* quest);
+        void OnGetPlayerClassLevelInfo(Player* player, PlayerClassLevelInfo& info);
         void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info);
         void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item);
         void OnMoveItemFromInventory(Player* player, Item* item);
@@ -115,6 +117,7 @@ namespace cmangos_module
         void OnUpdateHonor(Player* player);
         void OnAbandonQuest(Player* player, uint32 questId);
         void OnTradeAccepted(Player* player, Player* trader, TradeData* playerTrade, TradeData* traderTrade);
+        void OnRegenerate(Player* player, uint8 power, uint32 diff, float& addedValue);
 
         // Creature Hooks
         void OnAddToWorld(Creature* creature);

@@ -446,6 +446,14 @@ namespace cmangos_module
         }
     }
 
+    void ModuleMgr::OnGetPlayerClassLevelInfo(Player* player, PlayerClassLevelInfo& info)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnGetPlayerClassLevelInfo(player, info);
+        }
+    }
+
     void ModuleMgr::OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info)
     {
         for (Module* mod : modules)
@@ -993,6 +1001,14 @@ namespace cmangos_module
         for (Module* mod : modules)
         {
             mod->OnTradeAccepted(player, trader, playerTrade, traderTrade);
+        }
+    }
+
+    void ModuleMgr::OnRegenerate(Player* player, uint8 power, uint32 diff, float& addedValue)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnRegenerate(player, power, diff, addedValue);
         }
     }
 

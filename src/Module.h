@@ -264,6 +264,8 @@ namespace cmangos_module
         virtual void OnKill(Unit* unit, Unit* victim) {}
         // Called when a unit heals another unit
         virtual void OnDealHeal(Unit* unit, Unit* victim, int32 gain, uint32 addHealth) {}
+        // Called when a unit power has changed
+        virtual void OnSetPower(Unit* unit, uint8 power, uint32& value) {}
 
         // Spell Hooks
         // Called when a spell hits a unit

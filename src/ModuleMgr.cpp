@@ -784,6 +784,14 @@ namespace cmangos_module
         }
     }
 
+    void ModuleMgr::OnSetPower(Unit* unit, uint8 power, uint32& value)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnSetPower(unit, power, value);
+        }
+    }
+
     void ModuleMgr::OnHit(Spell* spell, Unit* caster, Unit* victim)
     {
         for (Module* mod : modules)

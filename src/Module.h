@@ -133,7 +133,11 @@ namespace cmangos_module
         virtual bool OnGossipSelect(Player* player, Creature* creature, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId) { return false; }
         // Called when a player selects an option on a dialog. Return true to override default logic
         virtual bool OnGossipSelect(Player* player, Item* item, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId) { return false; }
-    
+        // Called when a player requests quest details from an quest giver
+        virtual void OnGossipQuestDetails(Player* player, const Quest* quest, const ObjectGuid& questGiverGuid) {}
+        // Called when a player requests quest rewards details from an quest giver on completion
+        virtual void OnGossipQuestReward(Player* player, const Quest* quest, const ObjectGuid& questGiverGuid) {}
+
         // Player Talent Hooks
         // Called when a player learns a new talent
         virtual void OnLearnTalent(Player* player, uint32 spellId) {}

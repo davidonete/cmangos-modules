@@ -188,6 +188,22 @@ namespace cmangos_module
         return overriden;
     }
 
+    void ModuleMgr::OnGossipQuestDetails(Player* player, const Quest* quest, const ObjectGuid& questGiverGuid)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnGossipQuestDetails(player, quest, questGiverGuid);
+        }
+    }
+
+    void ModuleMgr::OnGossipQuestReward(Player* player, const Quest* quest, const ObjectGuid& questGiverGuid)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnGossipQuestReward(player, quest, questGiverGuid);
+        }
+    }
+
     void ModuleMgr::OnLearnTalent(Player* player, uint32 spellId)
     {
         for (Module* mod : modules)

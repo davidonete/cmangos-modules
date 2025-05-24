@@ -60,24 +60,46 @@ namespace cmangos_module
         void OnWorldInitialized();
         void OnWorldUpdated(uint32 elapsed);
 
-        // Player Hooks
+        // Player Item Hooks
         bool OnUseItem(Player* player, Item* item);
+        void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item);
+        void OnMoveItemFromInventory(Player* player, Item* item);
+        void OnMoveItemToInventory(Player* player, Item* item);
+        void OnStoreItem(Player* player, Loot* loot, Item* item);
+        void OnStoreItem(Player* player, Item* item);
+        void OnEquipItem(Player* player, Item* item);
+        void OnSellItem(Player* player, Item* item, uint32 money);
+        void OnBuyBackItem(Player* player, Item* item, uint32 money);
+
+        // Player Gossip Hooks
         bool OnPreGossipHello(Player* player, const ObjectGuid& guid);
         void OnGossipHello(Player* player, const ObjectGuid& guid);
         bool OnGossipSelect(Player* player, const ObjectGuid& guid, uint32 sender, uint32 action, const std::string& code, uint32 gossipListId);
+        void OnGossipQuestDetails(Player* player, const Quest* quest, const ObjectGuid& questGiverGuid);
+        void OnGossipQuestReward(Player* player, const Quest* quest, const ObjectGuid& questGiverGuid);
+
+        // Player Talent Hooks
         void OnLearnTalent(Player* player, uint32 spellId);
         void OnResetTalents(Player* player, uint32 cost);
+
+        // Player DB Hooks
         void OnPreLoadFromDB(Player* player);
         void OnLoadFromDB(Player* player);
         void OnSaveToDB(Player* player);
         void OnDeleteFromDB(uint32 playerId);
+
+        // Player Session Hooks
         void OnLogOut(Player* player);
         void OnPreCharacterCreated(Player* player);
         void OnCharacterCreated(Player* player);
+
+        // Player Action Button Hooks
         bool OnLoadActionButtons(Player* player, ActionButtonList (&actionButtons)[2]);
         bool OnLoadActionButtons(Player* player, ActionButtonList& actionButtons);
         bool OnSaveActionButtons(Player* player, ActionButtonList(&actionButtons)[2]);
         bool OnSaveActionButtons(Player* player, ActionButtonList& actionButtons);
+
+        // Player Action Hooks
         bool OnPreHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32& outDamage);
         void OnHandleFall(Player* player, const MovementInfo& movementInfo, float lastFallZ, uint32 damage);
         bool OnPreResurrect(Player* player);
@@ -92,11 +114,6 @@ namespace cmangos_module
         void OnRewardQuest(Player* player, const Quest* quest);
         void OnGetPlayerClassLevelInfo(Player* player, PlayerClassLevelInfo& info);
         void OnGetPlayerLevelInfo(Player* player, PlayerLevelInfo& info);
-        void OnSetVisibleItemSlot(Player* player, uint8 slot, Item* item);
-        void OnMoveItemFromInventory(Player* player, Item* item);
-        void OnMoveItemToInventory(Player* player, Item* item);
-        void OnStoreItem(Player* player, Loot* loot, Item* item);
-        void OnStoreItem(Player* player, Item* item);
         void OnAddSpell(Player* player, uint32 spellId);
         void OnDuelComplete(Player* player, Player* opponent, uint8 duelCompleteType);
         void OnKilledMonsterCredit(Player* player, uint32 entry, ObjectGuid& guid);
@@ -105,13 +122,10 @@ namespace cmangos_module
         bool OnHandlePageTextQuery(Player* player, const WorldPacket& packet);
         void OnUpdateSkill(Player* player, uint16 skillId);
         void OnRewardHonor(Player* player, Unit* victim);
-        void OnEquipItem(Player* player, Item* item);
         void OnTaxiFlightRouteStart(Player* player, const Taxi::Tracker& taxiTracker, bool initial);
         void OnTaxiFlightRouteEnd(Player* player, const Taxi::Tracker& taxiTracker, bool final);
         void OnEmote(Player* player, Unit* target, uint32 emote);
         void OnBuyBankSlot(Player* player, uint32 slot, uint32 price);
-        void OnSellItem(Player* player, Item* item, uint32 money);
-        void OnBuyBackItem(Player* player, Item* item, uint32 money);
         void OnSummoned(Player* player, const ObjectGuid& summoner);
         void OnAreaExplored(Player* player, uint32 areaId);
         void OnUpdateHonor(Player* player);

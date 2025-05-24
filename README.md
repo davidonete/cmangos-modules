@@ -14,6 +14,7 @@ Here is a list of compatible modules that you can install with this system:
 - [Balancing](https://github.com/davidonete/cmangos-balancing.git) (Classic only): A module to balance classes, modifying and adding new spells to classes
 - [Paladin power](https://github.com/Redbu11dev/cmangos-paladinpower) (Classic only): A module to give paladins their cut spells back
 - [Classless](https://github.com/davidonete/cmangos-classless) (Classic only): A module to allow a classless game mode
+- [VoiceOver](https://github.com/davidonete/cmangos-voiceover) (Classic only): Module to support working with the VoiceOver (AI generated npc voices) addon
 
 # How to install
 NOTE: At the moment there is no officially supported way for installing this system using the stock cmangos source code, however we have prepared two options depending on your skills. This guide assumes that you have knowledge on using git repositories and know how to compile using cmake, if not please refer to the [Beginners Guide](https://github.com/cmangos/issues/wiki/Beginners-Guide-Introduction) for more info.

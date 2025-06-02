@@ -988,6 +988,14 @@ namespace cmangos_module
         }
     }
 
+    void ModuleMgr::OnCreateItem(Player* player, Item* item, uint32 amount)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnCreateItem(player, item, amount);
+        }
+    }
+
     void ModuleMgr::OnSummoned(Player* player, const ObjectGuid& summoner)
     {
         for (Module* mod : modules)
@@ -1009,6 +1017,14 @@ namespace cmangos_module
         for (Module* mod : modules)
         {
             mod->OnUpdateHonor(player);
+        }
+    }
+
+    void ModuleMgr::OnAcceptQuest(Player* player, uint32 questId, const ObjectGuid* questGiver)
+    {
+        for (Module* mod : modules)
+        {
+            mod->OnAcceptQuest(player, questId, questGiver);
         }
     }
 

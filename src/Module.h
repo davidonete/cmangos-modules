@@ -117,6 +117,8 @@ namespace cmangos_module
         virtual void OnSellItem(Player* player, Item* item, uint32 money) {}
         // Called when a player buys back a sold item from a vendor
         virtual void OnBuyBackItem(Player* player, Item* item, uint32 money) {}
+        // Called when a player creates an item
+        virtual void OnCreateItem(Player* player, Item* item, uint32 amount) {}
 
         // Player Gossip Hooks
         // Called before generating a gossip menu dialog. Return true to override default logic
@@ -228,6 +230,8 @@ namespace cmangos_module
         virtual void OnAreaExplored(Player* player, uint32 areaId) {}
         // Called when updating player honor
         virtual void OnUpdateHonor(Player* player) {}
+        // Called when a player accepts a quest
+        virtual void OnAcceptQuest(Player* player, uint32 questId, const ObjectGuid* questGiver) {}
         // Called when a player abandons a quest
         virtual void OnAbandonQuest(Player* player, uint32 questId) {}
         // Called when a player accepts a trade

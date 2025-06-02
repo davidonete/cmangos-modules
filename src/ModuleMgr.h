@@ -70,6 +70,7 @@ namespace cmangos_module
         void OnEquipItem(Player* player, Item* item);
         void OnSellItem(Player* player, Item* item, uint32 money);
         void OnBuyBackItem(Player* player, Item* item, uint32 money);
+        void OnCreateItem(Player* player, Item* item, uint32 amount);
 
         // Player Gossip Hooks
         bool OnPreGossipHello(Player* player, const ObjectGuid& guid);
@@ -129,6 +130,7 @@ namespace cmangos_module
         void OnSummoned(Player* player, const ObjectGuid& summoner);
         void OnAreaExplored(Player* player, uint32 areaId);
         void OnUpdateHonor(Player* player);
+        void OnAcceptQuest(Player* player, uint32 questId, const ObjectGuid* questGiver);
         void OnAbandonQuest(Player* player, uint32 questId);
         void OnTradeAccepted(Player* player, Player* trader, TradeData* playerTrade, TradeData* traderTrade);
         void OnRegenerate(Player* player, uint8 power, uint32 diff, float& addedValue);

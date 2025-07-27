@@ -808,6 +808,20 @@ namespace cmangos_module
         }
     }
 
+    bool ModuleMgr::OnGetReactionTo(const Unit* unit, const Unit* target, ReputationRank& outReaction)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnGetReactionTo(unit, target, outReaction))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
     void ModuleMgr::OnHit(Spell* spell, Unit* caster, Unit* victim)
     {
         for (Module* mod : modules)

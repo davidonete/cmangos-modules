@@ -155,6 +155,7 @@ namespace cmangos_module
         void OnKill(Unit* unit, Unit* victim);
         void OnDealHeal(Unit* unit, Unit* victim, int32 gain, uint32 addHealth);
         void OnSetPower(Unit* unit, uint8 power, uint32& value);
+        bool OnGetReactionTo(const Unit* unit, const Unit* target, ReputationRank& outReaction);
 
         // Spell Hooks
         void OnHit(Spell* spell, Unit* caster, Unit* victim);

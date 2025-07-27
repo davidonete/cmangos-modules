@@ -274,6 +274,8 @@ namespace cmangos_module
         virtual void OnDealHeal(Unit* unit, Unit* victim, int32 gain, uint32 addHealth) {}
         // Called when a unit power has changed
         virtual void OnSetPower(Unit* unit, uint8 power, uint32& value) {}
+        // Called when getting the reaction towards a target. Return true to override default logic
+        virtual bool OnGetReactionTo(const Unit* unit, const Unit* target, ReputationRank& outReaction) { return false; }
 
         // Spell Hooks
         // Called when a spell hits a unit

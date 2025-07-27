@@ -50,12 +50,12 @@ namespace cmangos_module
         std::string FormatString(const char* format, ...);
         std::vector<std::string> SplitString(const std::string& input, const std::string& delimiter);
 
-        bool IsMaxLevel(Player* player);
+        bool IsMaxLevel(const Player* player);
         bool IsAlliance(uint8 race);
-        bool IsAlliance(Player* player);
-        bool InPvpMap(Player* player);
-        bool InDungeon(Player* player);
-        bool InRaid(Player* player);
+        bool IsAlliance(const Player* player);
+        bool InPvpMap(const Player* player);
+        bool InDungeon(const Player* player);
+        bool InRaid(const Player* player);
 
         void ForEachEquippedItem(const Player* player, std::function<void(Item*)> callback);
         void ForEachInventoryItem(const Player* player, std::function<void(Item*)> callback);

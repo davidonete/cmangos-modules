@@ -63,7 +63,7 @@ namespace cmangos_module
             return substrings;
         }
 
-        bool IsMaxLevel(Player* player)
+        bool IsMaxLevel(const Player* player)
         {
             return player && player->GetLevel() >= sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL);
         }
@@ -79,12 +79,12 @@ namespace cmangos_module
                    race == RACE_GNOME;
         }
 
-        bool IsAlliance(Player* player)
+        bool IsAlliance(const Player* player)
         {
             return player && IsAlliance(player->getRace());
         }
 
-        bool InPvpMap(Player* player)
+        bool InPvpMap(const Player* player)
         {
             if (player)
             {
@@ -100,7 +100,7 @@ namespace cmangos_module
             return false;
         }
 
-        bool InDungeon(Player* player)
+        bool InDungeon(const Player* player)
         {
             if (player && player->IsInWorld())
             {
@@ -116,7 +116,7 @@ namespace cmangos_module
             return false;
         }
 
-        bool InRaid(Player* player)
+        bool InRaid(const Player* player)
         {
             if (player && player->IsInWorld())
             {

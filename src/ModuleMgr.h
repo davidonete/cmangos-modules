@@ -132,6 +132,7 @@ namespace cmangos_module
         void OnUpdateHonor(Player* player);
         void OnAcceptQuest(Player* player, uint32 questId, const ObjectGuid* questGiver);
         void OnAbandonQuest(Player* player, uint32 questId);
+        bool OnPreHandleInitializeTrade(Player* player, Player* trader);
         void OnTradeAccepted(Player* player, Player* trader, TradeData* playerTrade, TradeData* traderTrade);
         void OnRegenerate(Player* player, uint8 power, uint32 diff, float& addedValue);
 

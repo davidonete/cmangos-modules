@@ -1064,6 +1064,20 @@ namespace cmangos_module
         }
     }
 
+    bool ModuleMgr::OnPreHandleInitializeTrade(Player* player, Player* trader)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnPreHandleInitializeTrade(player, trader))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
     void ModuleMgr::OnTradeAccepted(Player* player, Player* trader, TradeData* playerTrade, TradeData* traderTrade)
     {
         for (Module* mod : modules)

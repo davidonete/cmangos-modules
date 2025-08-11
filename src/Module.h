@@ -234,6 +234,8 @@ namespace cmangos_module
         virtual void OnAcceptQuest(Player* player, uint32 questId, const ObjectGuid* questGiver) {}
         // Called when a player abandons a quest
         virtual void OnAbandonQuest(Player* player, uint32 questId) {}
+        // Called before a player requests a trade. Return true to override default logic
+        virtual bool OnPreHandleInitializeTrade(Player* player, Player* trader) { return false; }
         // Called when a player accepts a trade
         virtual void OnTradeAccepted(Player* player, Player* trader, TradeData* playerTrade, TradeData* traderTrade) {}
         // Called when a player regenerates power

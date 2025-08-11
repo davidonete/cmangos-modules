@@ -320,12 +320,12 @@ namespace cmangos_module
         virtual void OnPickUpFlag(BattleGroundWS* battleground, Player* player, uint32 team) {}
 
         // Group Hooks
-        // Called before a player is added to a group. Return true to override default logic
-        virtual bool OnPreAddMember(Group* group, Player* player, uint8 method, bool& outValue) { return false; }
         // Called when a player is added to a group
         virtual void OnAddMember(Group* group, Player* player, uint8 method) {}
         // Called when a player is removed from a group
         virtual void OnRemoveMember(Group* group, Player* player, uint8 method) {}
+        // Called before a player sends an invite to another player. Return true to override default logic
+        virtual bool OnPreInviteMember(Group* group, Player* player, Player* recipient) { return false; }
 
         // Auction House Hooks
         // Called when a player puts an item for sale into the auction house

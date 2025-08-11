@@ -183,9 +183,9 @@ namespace cmangos_module
         void OnPickUpFlag(BattleGroundWS* battleground, Player* player, uint32 team);
 
         // Group Hooks
-        bool OnPreAddMember(Group* group, Player* player, uint8 method, bool& outValue);
         void OnAddMember(Group* group, Player* player, uint8 method);
         void OnRemoveMember(Group* group, Player* player, uint8 method);
+        bool OnPreInviteMember(Group* group, Player* player, Player* recipient);
 
         // Auction House Hooks
         void OnSellItem(AuctionEntry* auctionEntry, Player* player);

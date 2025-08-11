@@ -962,6 +962,20 @@ namespace cmangos_module
         }
     }
 
+    bool ModuleMgr::OnPreAddMember(Group* group, Player* player, uint8 method, bool& outValue)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnPreAddMember(group, player, method, outValue))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
     void ModuleMgr::OnAddMember(Group* group, Player* player, uint8 method)
     {
         for (Module* mod : modules)

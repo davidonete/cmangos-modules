@@ -1066,6 +1066,20 @@ namespace cmangos_module
         }
     }
 
+    bool ModuleMgr::OnCanCheckMailBox(Player* player, const ObjectGuid& mailboxGuid, bool& outResult)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnCanCheckMailBox(player, mailboxGuid, outResult))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
     void ModuleMgr::OnUpdateBid(AuctionEntry* auctionEntry, Player* player, uint32 newBid)
     {
         for (Module* mod : modules)

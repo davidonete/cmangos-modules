@@ -239,6 +239,10 @@ namespace cmangos_module
         // Called when a player regenerates power
         virtual void OnRegenerate(Player* player, uint8 power, uint32 diff, float& addedValue) {}
 
+        // Player Mail Hooks
+        // Called when checking if the player can use a mailbox. Return true to override default logic
+        virtual bool OnCanCheckMailBox(Player* player, const ObjectGuid& mailboxGuid, bool& outResult) { return false; }
+
         // Creature Hooks
         // Called after a creature added into the world
         virtual void OnAddToWorld(Creature* creature) {}

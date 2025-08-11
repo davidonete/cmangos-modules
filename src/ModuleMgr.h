@@ -135,6 +135,9 @@ namespace cmangos_module
         void OnTradeAccepted(Player* player, Player* trader, TradeData* playerTrade, TradeData* traderTrade);
         void OnRegenerate(Player* player, uint8 power, uint32 diff, float& addedValue);
 
+        // Player Mail Hooks
+        bool OnCanCheckMailBox(Player* player, const ObjectGuid& mailboxGuid, bool& outResult);
+
         // Creature Hooks
         void OnAddToWorld(Creature* creature);
         bool OnRespawn(Creature* creature, time_t& respawnTime);

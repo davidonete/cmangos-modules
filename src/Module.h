@@ -290,6 +290,8 @@ namespace cmangos_module
         virtual void OnCast(Spell* spell, Unit* caster, Unit* victim) {}
         // Casted when a spell is triggered by something
         virtual void OnProc(const ProcExecutionData& data, SpellAuraProcResult& procResult) {}
+        // Called when a spell aura ticks. Return true to override default logic
+        virtual bool OnPeriodicTick(Aura* aura) { return false; }
 
         // Loot Hooks
         // Called when generating the loot table. Return true to override default logic

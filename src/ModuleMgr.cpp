@@ -846,6 +846,20 @@ namespace cmangos_module
         }
     }
 
+    bool ModuleMgr::OnPeriodicTick(Aura* aura)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnPeriodicTick(aura))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
     bool ModuleMgr::OnFillLoot(Loot* loot, Player* owner)
     {
         bool overriden = false;

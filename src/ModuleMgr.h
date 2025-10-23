@@ -165,6 +165,7 @@ namespace cmangos_module
         void OnHit(Spell* spell, Unit* caster, Unit* victim);
         void OnCast(Spell* spell, Unit* caster, Unit* victim);
         void OnProc(const ProcExecutionData& data, SpellAuraProcResult& procResult);
+        bool OnPeriodicTick(Aura* aura);
 
         // Loot Hooks
         bool OnFillLoot(Loot* loot, Player* owner);

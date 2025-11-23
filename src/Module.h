@@ -282,6 +282,8 @@ namespace cmangos_module
         virtual void OnSetPower(Unit* unit, uint8 power, uint32& value) {}
         // Called when getting the reaction towards a target. Return true to override default logic
         virtual bool OnGetReactionTo(const Unit* unit, const Unit* target, ReputationRank& outReaction) { return false; }
+        // Called when getting the spell rank of a unit spell. Return true to override default logic
+        virtual bool OnGetSpellRank(const Unit* unit, const SpellEntry* spellInfo, uint32& outSpellRank) { return false; }
 
         // Spell Hooks
         // Called when a spell hits a unit

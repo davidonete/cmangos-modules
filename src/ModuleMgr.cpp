@@ -822,6 +822,20 @@ namespace cmangos_module
         return overriden;
     }
 
+    bool ModuleMgr::OnGetSpellRank(const Unit* unit, const SpellEntry* spellInfo, uint32& outSpellRank)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnGetSpellRank(unit, spellInfo, outSpellRank))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
     void ModuleMgr::OnHit(Spell* spell, Unit* caster, Unit* victim)
     {
         for (Module* mod : modules)

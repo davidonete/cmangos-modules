@@ -108,6 +108,7 @@ namespace cmangos_module
         void OnReleaseSpirit(Player* player, const WorldSafeLocsEntry* closestGrave);
         void OnDeath(Player* player, Unit* killer);
         void OnDeath(Player* player, uint8 environmentalDamageType);
+        bool OnPreGiveXP(Player* player, uint32& xp, Creature* victim);
         void OnGiveXP(Player* player, uint32 xp, Creature* victim);
         void OnGiveLevel(Player* player, uint32 level);
         void OnModifyMoney(Player* player, int32 diff);

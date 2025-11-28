@@ -422,6 +422,20 @@ namespace cmangos_module
         }
     }
 
+    bool ModuleMgr::OnPreGiveXP(Player* player, uint32& xp, Creature* victim)
+    {
+        bool overriden = false;
+        for (Module* mod : modules)
+        {
+            if (mod->OnPreGiveXP(player, xp, victim))
+            {
+                overriden = true;
+            }
+        }
+
+        return overriden;
+    }
+
     void ModuleMgr::OnGiveXP(Player* player, uint32 xp, Creature* victim)
     {
         for (Module* mod : modules)

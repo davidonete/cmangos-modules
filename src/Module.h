@@ -186,6 +186,8 @@ namespace cmangos_module
         virtual void OnDeath(Player* player, Unit* killer) {}
         // Called when a player has died from environment damage
         virtual void OnDeath(Player* player, uint8 environmentalDamageType) {}
+        // Called before a player receives experience. Return true to override default logic
+        virtual bool OnPreGiveXP(Player* player, uint32& xp, Creature* victim) { return false; }
         // Called when a player receives experience
         virtual void OnGiveXP(Player* player, uint32 xp, Creature* victim) {}
         // Called when a player receives a level
